@@ -1,0 +1,149 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  body {
+    background-color: #0a0a0c;
+  }
+}
+
+@layer utilities {
+  .glassmorphism {
+    @apply bg-cyberGray/40 backdrop-blur-md border border-white/10 shadow-lg;
+  }
+
+  .scanline {
+    width: 100%;
+    height: 100px;
+    z-index: 10;
+    pointer-events: none;
+    position: absolute;
+    top: 0;
+    left: 0;
+    background: linear-gradient(to bottom, transparent 0%, rgba(0, 243, 255, 0.1) 50%, transparent 100%);
+    animation: scanline 8s linear infinite;
+  }
+
+  @keyframes scanline {
+    0% {
+      top: -100px;
+    }
+
+    100% {
+      top: 100%;
+    }
+  }
+
+  .terminal-flicker {
+    animation: flicker 0.15s infinite;
+  }
+
+  @keyframes flicker {
+    0% {
+      opacity: 0.97;
+    }
+
+    100% {
+      opacity: 1;
+    }
+  }
+}
+
+::-webkit-scrollbar {
+  width: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: #0a0a0c;
+}
+
+::-webkit-scrollbar-thumb {
+  background: #00f3ff;
+  border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: #b026ff;
+}
+
+/* PDF Export Mode (Black & White with Colored Subject Blocks) */
+.pdf-export-mode {
+  background-color: white !important;
+  color: black !important;
+  border: none !important;
+  box-shadow: none !important;
+  /* Make sure it scales within an A4 landscape width */
+  width: 1600px !important;
+  padding: 0 !important;
+  margin: 0 auto !important;
+  font-size: 10px !important;
+}
+
+.pdf-export-mode table {
+  border-collapse: collapse !important;
+  width: 100% !important;
+  table-layout: fixed !important;
+}
+
+.pdf-export-mode th, 
+.pdf-export-mode td {
+  border: 1px solid #000 !important;
+  background-color: white !important;
+  color: black !important;
+  padding: 2px !important;
+  height: auto !important;
+}
+
+/* Shrink text for printing */
+.pdf-export-mode .text-xs,
+.pdf-export-mode .text-sm,
+.pdf-export-mode .font-bold {
+  font-size: 10px !important;
+  line-height: 1.1 !important;
+}
+
+.pdf-export-mode .text-\[11px\],
+.pdf-export-mode .text-\[9px\],
+.pdf-export-mode .text-\[10px\],
+.pdf-export-mode .text-[8px] {
+  font-size: 8px !important;
+}
+
+/* Override neon text colors in table headers/rows */
+.pdf-export-mode .text-neonCyan,
+.pdf-export-mode .text-neonPurple {
+  color: black !important;
+}
+
+.pdf-export-mode th {
+  background-color: #f8f8f8 !important;
+}
+
+/* Keep break periods subtly distinct but grayscale */
+.pdf-export-mode .bg-cyberBlack\/80 {
+  background-color: #eeeeee !important;
+  color: #333 !important;
+}
+
+/* Neutralize gray text */
+.pdf-export-mode .text-gray-400,
+.pdf-export-mode .text-gray-500,
+.pdf-export-mode .text-gray-600 {
+  color: #444 !important;
+}
+
+/* Prevent white text on white background */
+.pdf-export-mode .text-white {
+  color: black !important;
+}
+
+/* Keep the actual Subject Blocks colored (but printable friendly) */
+.pdf-export-mode .bg-neonPurple\/10 {
+  background-color: #f3e8ff !important; /* Tailwind purple-100 */
+  border-left-color: #9333ea !important; /* Tailwind purple-600 */
+}
+
+.pdf-export-mode .text-neonPurple.opacity-80 {
+  color: #7e22ce !important; /* Darker purple for room name string */
+}

@@ -1,0 +1,1474 @@
+{
+  "users": [
+    {
+      "id": 1,
+      "name": "Kabi",
+      "email": "kabileshk702@gmail.com",
+      "password_hash": "$2a$10$//dREc78lcNGOl4bBYNqD.qY8iTvZDf07ZvKILQjfbGOgIIv0ZeZK",
+      "role": "admin"
+    },
+    {
+      "id": 895832,
+      "name": "chella",
+      "email": "chelladuraioffl@gmail.com",
+      "password_hash": "$2a$10$yjEECGBrqCvNbacoO6Q8EeaMWhiC1wjl.ci.dst2rrjNb9F7nAa4u",
+      "role": "teacher",
+      "created_at": "2026-03-08T14:22:24.855Z"
+    },
+    {
+      "id": 560021,
+      "name": "deepak",
+      "email": "deepak234@gmail.com",
+      "password_hash": "$2a$10$cCcKw3TIkzRPub29BAX0KOqxpZzHet4LP69QykU0TZ6jC507yrUT2",
+      "role": "teacher",
+      "created_at": "2026-03-08T14:22:51.047Z"
+    },
+    {
+      "id": 350974,
+      "name": "arun",
+      "email": "aruny052006@gmail.com",
+      "password_hash": "$2a$10$FWzMIP2.IC8jDa09R5Zxh.AYxFRtH297c3TrG64jAFtwE/dbnlsxq",
+      "role": "teacher",
+      "created_at": "2026-03-08T14:23:41.653Z"
+    },
+    {
+      "id": 944170,
+      "name": "dharshan",
+      "email": "dharshan99@gmail.com",
+      "password_hash": "$2a$10$uMYPHWB.Ql8RpqLdXTvlH.cCLCPWFH1/DzoMpL432l78ESUCJODSe",
+      "role": "teacher",
+      "created_at": "2026-03-08T14:24:07.644Z"
+    },
+    {
+      "id": 791810,
+      "name": "kabi",
+      "email": "kabi@gmail.com",
+      "password_hash": "$2a$10$XM8y2sCiK3fWQVS97eLz6.lH7rfrKhQPv0uINzJdnXeNkJ.7YRlUy",
+      "role": "teacher",
+      "created_at": "2026-03-08T14:24:41.184Z"
+    },
+    {
+      "id": 353192,
+      "name": "kabilesh",
+      "email": "kabileshoffl@gmail.com",
+      "password_hash": "$2a$10$RCBfNFv0Z3E0aOcDaJqyzuwjk47PM0ozP7s6hBTRe1.z66pxGThGC",
+      "role": "teacher",
+      "created_at": "2026-03-08T14:25:38.974Z"
+    }
+  ],
+  "departments": [],
+  "classrooms": [
+    {
+      "id": 778380,
+      "name": "3 CSE A",
+      "capacity": 63,
+      "type": "lecture"
+    },
+    {
+      "id": 762136,
+      "name": "3CSE B",
+      "capacity": 63,
+      "type": "lecture"
+    },
+    {
+      "id": 271792,
+      "name": "3 CSE C",
+      "capacity": 64,
+      "type": "lecture"
+    }
+  ],
+  "subjects": [
+    {
+      "id": 639987,
+      "name": "OOSE",
+      "code": "111",
+      "credits": 3
+    },
+    {
+      "id": 539620,
+      "name": "EAI",
+      "code": "112",
+      "credits": 3
+    },
+    {
+      "id": 620588,
+      "name": "NS",
+      "code": "113",
+      "credits": 3
+    },
+    {
+      "id": 947695,
+      "name": "DM",
+      "code": "114",
+      "credits": 3
+    },
+    {
+      "id": 474691,
+      "name": "CC",
+      "code": "115",
+      "credits": 3
+    },
+    {
+      "id": 230479,
+      "name": "RES",
+      "code": "116",
+      "credits": 3
+    }
+  ],
+  "teachers": [
+    {
+      "id": 443394,
+      "user_id": 895832,
+      "max_hours_per_week": 20
+    },
+    {
+      "id": 618631,
+      "user_id": 560021,
+      "max_hours_per_week": 20
+    },
+    {
+      "id": 857680,
+      "user_id": 350974,
+      "max_hours_per_week": 20
+    },
+    {
+      "id": 778823,
+      "user_id": 944170,
+      "max_hours_per_week": 20
+    },
+    {
+      "id": 403937,
+      "user_id": 791810,
+      "max_hours_per_week": 20
+    },
+    {
+      "id": 637454,
+      "user_id": 353192,
+      "max_hours_per_week": 20
+    }
+  ],
+  "teacher_subjects": [
+    {
+      "teacher_id": 443394,
+      "subject_id": 639987
+    },
+    {
+      "teacher_id": 618631,
+      "subject_id": 539620
+    },
+    {
+      "teacher_id": 857680,
+      "subject_id": 620588
+    },
+    {
+      "teacher_id": 778823,
+      "subject_id": 947695
+    },
+    {
+      "teacher_id": 403937,
+      "subject_id": 474691
+    },
+    {
+      "teacher_id": 637454,
+      "subject_id": 230479
+    }
+  ],
+  "timetable": [
+    {
+      "id": 619392,
+      "subject_id": 639987,
+      "teacher_id": 443394,
+      "classroom_id": 778380,
+      "day_of_week": "Saturday",
+      "start_time": "15:05:00",
+      "end_time": "15:50:00"
+    },
+    {
+      "id": 913897,
+      "subject_id": 639987,
+      "teacher_id": 443394,
+      "classroom_id": 778380,
+      "day_of_week": "Monday",
+      "start_time": "09:15:00",
+      "end_time": "10:00:00"
+    },
+    {
+      "id": 921382,
+      "subject_id": 639987,
+      "teacher_id": 443394,
+      "classroom_id": 778380,
+      "day_of_week": "Thursday",
+      "start_time": "09:15:00",
+      "end_time": "10:00:00"
+    },
+    {
+      "id": 568175,
+      "subject_id": 639987,
+      "teacher_id": 443394,
+      "classroom_id": 778380,
+      "day_of_week": "Tuesday",
+      "start_time": "14:05:00",
+      "end_time": "14:50:00"
+    },
+    {
+      "id": 692987,
+      "subject_id": 639987,
+      "teacher_id": 443394,
+      "classroom_id": 778380,
+      "day_of_week": "Tuesday",
+      "start_time": "11:45:00",
+      "end_time": "12:30:00"
+    },
+    {
+      "id": 425035,
+      "subject_id": 639987,
+      "teacher_id": 443394,
+      "classroom_id": 778380,
+      "day_of_week": "Friday",
+      "start_time": "11:45:00",
+      "end_time": "12:30:00"
+    },
+    {
+      "id": 382923,
+      "subject_id": 639987,
+      "teacher_id": 443394,
+      "classroom_id": 778380,
+      "day_of_week": "Saturday",
+      "start_time": "14:05:00",
+      "end_time": "14:50:00"
+    },
+    {
+      "id": 905158,
+      "subject_id": 639987,
+      "teacher_id": 443394,
+      "classroom_id": 778380,
+      "day_of_week": "Wednesday",
+      "start_time": "09:15:00",
+      "end_time": "10:00:00"
+    },
+    {
+      "id": 981641,
+      "subject_id": 539620,
+      "teacher_id": 618631,
+      "classroom_id": 778380,
+      "day_of_week": "Wednesday",
+      "start_time": "15:05:00",
+      "end_time": "15:50:00"
+    },
+    {
+      "id": 662293,
+      "subject_id": 539620,
+      "teacher_id": 618631,
+      "classroom_id": 778380,
+      "day_of_week": "Saturday",
+      "start_time": "11:45:00",
+      "end_time": "12:30:00"
+    },
+    {
+      "id": 693783,
+      "subject_id": 539620,
+      "teacher_id": 618631,
+      "classroom_id": 778380,
+      "day_of_week": "Thursday",
+      "start_time": "11:00:00",
+      "end_time": "11:45:00"
+    },
+    {
+      "id": 583173,
+      "subject_id": 539620,
+      "teacher_id": 618631,
+      "classroom_id": 778380,
+      "day_of_week": "Monday",
+      "start_time": "13:20:00",
+      "end_time": "14:05:00"
+    },
+    {
+      "id": 638714,
+      "subject_id": 539620,
+      "teacher_id": 618631,
+      "classroom_id": 778380,
+      "day_of_week": "Saturday",
+      "start_time": "13:20:00",
+      "end_time": "14:05:00"
+    },
+    {
+      "id": 702274,
+      "subject_id": 539620,
+      "teacher_id": 618631,
+      "classroom_id": 778380,
+      "day_of_week": "Friday",
+      "start_time": "10:00:00",
+      "end_time": "10:45:00"
+    },
+    {
+      "id": 15176,
+      "subject_id": 539620,
+      "teacher_id": 618631,
+      "classroom_id": 778380,
+      "day_of_week": "Friday",
+      "start_time": "13:20:00",
+      "end_time": "14:05:00"
+    },
+    {
+      "id": 683693,
+      "subject_id": 539620,
+      "teacher_id": 618631,
+      "classroom_id": 778380,
+      "day_of_week": "Thursday",
+      "start_time": "10:00:00",
+      "end_time": "10:45:00"
+    },
+    {
+      "id": 517491,
+      "subject_id": 620588,
+      "teacher_id": 857680,
+      "classroom_id": 778380,
+      "day_of_week": "Thursday",
+      "start_time": "13:20:00",
+      "end_time": "14:05:00"
+    },
+    {
+      "id": 748911,
+      "subject_id": 620588,
+      "teacher_id": 857680,
+      "classroom_id": 778380,
+      "day_of_week": "Saturday",
+      "start_time": "10:00:00",
+      "end_time": "10:45:00"
+    },
+    {
+      "id": 946257,
+      "subject_id": 620588,
+      "teacher_id": 857680,
+      "classroom_id": 778380,
+      "day_of_week": "Wednesday",
+      "start_time": "15:55:00",
+      "end_time": "16:40:00"
+    },
+    {
+      "id": 128653,
+      "subject_id": 620588,
+      "teacher_id": 857680,
+      "classroom_id": 778380,
+      "day_of_week": "Wednesday",
+      "start_time": "14:05:00",
+      "end_time": "14:50:00"
+    },
+    {
+      "id": 733646,
+      "subject_id": 620588,
+      "teacher_id": 857680,
+      "classroom_id": 778380,
+      "day_of_week": "Monday",
+      "start_time": "10:00:00",
+      "end_time": "10:45:00"
+    },
+    {
+      "id": 792902,
+      "subject_id": 620588,
+      "teacher_id": 857680,
+      "classroom_id": 778380,
+      "day_of_week": "Friday",
+      "start_time": "15:55:00",
+      "end_time": "16:40:00"
+    },
+    {
+      "id": 983526,
+      "subject_id": 620588,
+      "teacher_id": 857680,
+      "classroom_id": 778380,
+      "day_of_week": "Tuesday",
+      "start_time": "13:20:00",
+      "end_time": "14:05:00"
+    },
+    {
+      "id": 558244,
+      "subject_id": 620588,
+      "teacher_id": 857680,
+      "classroom_id": 778380,
+      "day_of_week": "Monday",
+      "start_time": "15:55:00",
+      "end_time": "16:40:00"
+    },
+    {
+      "id": 837561,
+      "subject_id": 947695,
+      "teacher_id": 778823,
+      "classroom_id": 778380,
+      "day_of_week": "Friday",
+      "start_time": "14:05:00",
+      "end_time": "14:50:00"
+    },
+    {
+      "id": 325219,
+      "subject_id": 947695,
+      "teacher_id": 778823,
+      "classroom_id": 778380,
+      "day_of_week": "Monday",
+      "start_time": "11:00:00",
+      "end_time": "11:45:00"
+    },
+    {
+      "id": 426305,
+      "subject_id": 947695,
+      "teacher_id": 778823,
+      "classroom_id": 778380,
+      "day_of_week": "Wednesday",
+      "start_time": "10:00:00",
+      "end_time": "10:45:00"
+    },
+    {
+      "id": 993171,
+      "subject_id": 947695,
+      "teacher_id": 778823,
+      "classroom_id": 778380,
+      "day_of_week": "Wednesday",
+      "start_time": "13:20:00",
+      "end_time": "14:05:00"
+    },
+    {
+      "id": 798047,
+      "subject_id": 947695,
+      "teacher_id": 778823,
+      "classroom_id": 778380,
+      "day_of_week": "Friday",
+      "start_time": "15:05:00",
+      "end_time": "15:50:00"
+    },
+    {
+      "id": 813689,
+      "subject_id": 947695,
+      "teacher_id": 778823,
+      "classroom_id": 778380,
+      "day_of_week": "Thursday",
+      "start_time": "15:55:00",
+      "end_time": "16:40:00"
+    },
+    {
+      "id": 482402,
+      "subject_id": 947695,
+      "teacher_id": 778823,
+      "classroom_id": 778380,
+      "day_of_week": "Tuesday",
+      "start_time": "10:00:00",
+      "end_time": "10:45:00"
+    },
+    {
+      "id": 887599,
+      "subject_id": 947695,
+      "teacher_id": 778823,
+      "classroom_id": 778380,
+      "day_of_week": "Tuesday",
+      "start_time": "15:05:00",
+      "end_time": "15:50:00"
+    },
+    {
+      "id": 177441,
+      "subject_id": 474691,
+      "teacher_id": 403937,
+      "classroom_id": 778380,
+      "day_of_week": "Saturday",
+      "start_time": "15:55:00",
+      "end_time": "16:40:00"
+    },
+    {
+      "id": 374696,
+      "subject_id": 474691,
+      "teacher_id": 403937,
+      "classroom_id": 778380,
+      "day_of_week": "Tuesday",
+      "start_time": "11:00:00",
+      "end_time": "11:45:00"
+    },
+    {
+      "id": 815120,
+      "subject_id": 474691,
+      "teacher_id": 403937,
+      "classroom_id": 778380,
+      "day_of_week": "Thursday",
+      "start_time": "14:05:00",
+      "end_time": "14:50:00"
+    },
+    {
+      "id": 303336,
+      "subject_id": 474691,
+      "teacher_id": 403937,
+      "classroom_id": 778380,
+      "day_of_week": "Saturday",
+      "start_time": "11:00:00",
+      "end_time": "11:45:00"
+    },
+    {
+      "id": 435076,
+      "subject_id": 474691,
+      "teacher_id": 403937,
+      "classroom_id": 778380,
+      "day_of_week": "Friday",
+      "start_time": "11:00:00",
+      "end_time": "11:45:00"
+    },
+    {
+      "id": 181687,
+      "subject_id": 474691,
+      "teacher_id": 403937,
+      "classroom_id": 778380,
+      "day_of_week": "Monday",
+      "start_time": "15:05:00",
+      "end_time": "15:50:00"
+    },
+    {
+      "id": 142639,
+      "subject_id": 474691,
+      "teacher_id": 403937,
+      "classroom_id": 778380,
+      "day_of_week": "Thursday",
+      "start_time": "15:05:00",
+      "end_time": "15:50:00"
+    },
+    {
+      "id": 944795,
+      "subject_id": 474691,
+      "teacher_id": 403937,
+      "classroom_id": 778380,
+      "day_of_week": "Monday",
+      "start_time": "14:05:00",
+      "end_time": "14:50:00"
+    },
+    {
+      "id": 407722,
+      "subject_id": 230479,
+      "teacher_id": 637454,
+      "classroom_id": 778380,
+      "day_of_week": "Saturday",
+      "start_time": "09:15:00",
+      "end_time": "10:00:00"
+    },
+    {
+      "id": 889909,
+      "subject_id": 230479,
+      "teacher_id": 637454,
+      "classroom_id": 778380,
+      "day_of_week": "Friday",
+      "start_time": "09:15:00",
+      "end_time": "10:00:00"
+    },
+    {
+      "id": 189241,
+      "subject_id": 230479,
+      "teacher_id": 637454,
+      "classroom_id": 778380,
+      "day_of_week": "Tuesday",
+      "start_time": "15:55:00",
+      "end_time": "16:40:00"
+    },
+    {
+      "id": 29705,
+      "subject_id": 230479,
+      "teacher_id": 637454,
+      "classroom_id": 778380,
+      "day_of_week": "Monday",
+      "start_time": "11:45:00",
+      "end_time": "12:30:00"
+    },
+    {
+      "id": 989235,
+      "subject_id": 230479,
+      "teacher_id": 637454,
+      "classroom_id": 778380,
+      "day_of_week": "Tuesday",
+      "start_time": "09:15:00",
+      "end_time": "10:00:00"
+    },
+    {
+      "id": 231652,
+      "subject_id": 230479,
+      "teacher_id": 637454,
+      "classroom_id": 778380,
+      "day_of_week": "Wednesday",
+      "start_time": "11:45:00",
+      "end_time": "12:30:00"
+    },
+    {
+      "id": 566492,
+      "subject_id": 230479,
+      "teacher_id": 637454,
+      "classroom_id": 778380,
+      "day_of_week": "Wednesday",
+      "start_time": "11:00:00",
+      "end_time": "11:45:00"
+    },
+    {
+      "id": 998128,
+      "subject_id": 230479,
+      "teacher_id": 637454,
+      "classroom_id": 778380,
+      "day_of_week": "Thursday",
+      "start_time": "11:45:00",
+      "end_time": "12:30:00"
+    },
+    {
+      "id": 137804,
+      "subject_id": 639987,
+      "teacher_id": 443394,
+      "classroom_id": 762136,
+      "day_of_week": "Thursday",
+      "start_time": "15:05:00",
+      "end_time": "15:50:00"
+    },
+    {
+      "id": 245906,
+      "subject_id": 639987,
+      "teacher_id": 443394,
+      "classroom_id": 762136,
+      "day_of_week": "Saturday",
+      "start_time": "10:00:00",
+      "end_time": "10:45:00"
+    },
+    {
+      "id": 476127,
+      "subject_id": 639987,
+      "teacher_id": 443394,
+      "classroom_id": 762136,
+      "day_of_week": "Friday",
+      "start_time": "09:15:00",
+      "end_time": "10:00:00"
+    },
+    {
+      "id": 693709,
+      "subject_id": 639987,
+      "teacher_id": 443394,
+      "classroom_id": 762136,
+      "day_of_week": "Friday",
+      "start_time": "15:05:00",
+      "end_time": "15:50:00"
+    },
+    {
+      "id": 822151,
+      "subject_id": 639987,
+      "teacher_id": 443394,
+      "classroom_id": 762136,
+      "day_of_week": "Tuesday",
+      "start_time": "15:55:00",
+      "end_time": "16:40:00"
+    },
+    {
+      "id": 254641,
+      "subject_id": 639987,
+      "teacher_id": 443394,
+      "classroom_id": 762136,
+      "day_of_week": "Wednesday",
+      "start_time": "11:45:00",
+      "end_time": "12:30:00"
+    },
+    {
+      "id": 294888,
+      "subject_id": 639987,
+      "teacher_id": 443394,
+      "classroom_id": 762136,
+      "day_of_week": "Monday",
+      "start_time": "11:00:00",
+      "end_time": "11:45:00"
+    },
+    {
+      "id": 234228,
+      "subject_id": 639987,
+      "teacher_id": 443394,
+      "classroom_id": 762136,
+      "day_of_week": "Monday",
+      "start_time": "10:00:00",
+      "end_time": "10:45:00"
+    },
+    {
+      "id": 458359,
+      "subject_id": 539620,
+      "teacher_id": 618631,
+      "classroom_id": 762136,
+      "day_of_week": "Wednesday",
+      "start_time": "14:05:00",
+      "end_time": "14:50:00"
+    },
+    {
+      "id": 138296,
+      "subject_id": 539620,
+      "teacher_id": 618631,
+      "classroom_id": 762136,
+      "day_of_week": "Tuesday",
+      "start_time": "10:00:00",
+      "end_time": "10:45:00"
+    },
+    {
+      "id": 203925,
+      "subject_id": 539620,
+      "teacher_id": 618631,
+      "classroom_id": 762136,
+      "day_of_week": "Monday",
+      "start_time": "09:15:00",
+      "end_time": "10:00:00"
+    },
+    {
+      "id": 983221,
+      "subject_id": 539620,
+      "teacher_id": 618631,
+      "classroom_id": 762136,
+      "day_of_week": "Wednesday",
+      "start_time": "10:00:00",
+      "end_time": "10:45:00"
+    },
+    {
+      "id": 73426,
+      "subject_id": 539620,
+      "teacher_id": 618631,
+      "classroom_id": 762136,
+      "day_of_week": "Saturday",
+      "start_time": "11:00:00",
+      "end_time": "11:45:00"
+    },
+    {
+      "id": 749170,
+      "subject_id": 539620,
+      "teacher_id": 618631,
+      "classroom_id": 762136,
+      "day_of_week": "Saturday",
+      "start_time": "15:05:00",
+      "end_time": "15:50:00"
+    },
+    {
+      "id": 576395,
+      "subject_id": 539620,
+      "teacher_id": 618631,
+      "classroom_id": 762136,
+      "day_of_week": "Monday",
+      "start_time": "15:55:00",
+      "end_time": "16:40:00"
+    },
+    {
+      "id": 481141,
+      "subject_id": 539620,
+      "teacher_id": 618631,
+      "classroom_id": 762136,
+      "day_of_week": "Tuesday",
+      "start_time": "09:15:00",
+      "end_time": "10:00:00"
+    },
+    {
+      "id": 993434,
+      "subject_id": 620588,
+      "teacher_id": 857680,
+      "classroom_id": 762136,
+      "day_of_week": "Monday",
+      "start_time": "11:45:00",
+      "end_time": "12:30:00"
+    },
+    {
+      "id": 409578,
+      "subject_id": 620588,
+      "teacher_id": 857680,
+      "classroom_id": 762136,
+      "day_of_week": "Tuesday",
+      "start_time": "14:05:00",
+      "end_time": "14:50:00"
+    },
+    {
+      "id": 19936,
+      "subject_id": 620588,
+      "teacher_id": 857680,
+      "classroom_id": 762136,
+      "day_of_week": "Saturday",
+      "start_time": "13:20:00",
+      "end_time": "14:05:00"
+    },
+    {
+      "id": 86248,
+      "subject_id": 620588,
+      "teacher_id": 857680,
+      "classroom_id": 762136,
+      "day_of_week": "Thursday",
+      "start_time": "09:15:00",
+      "end_time": "10:00:00"
+    },
+    {
+      "id": 44576,
+      "subject_id": 620588,
+      "teacher_id": 857680,
+      "classroom_id": 762136,
+      "day_of_week": "Wednesday",
+      "start_time": "15:05:00",
+      "end_time": "15:50:00"
+    },
+    {
+      "id": 503433,
+      "subject_id": 620588,
+      "teacher_id": 857680,
+      "classroom_id": 762136,
+      "day_of_week": "Friday",
+      "start_time": "14:05:00",
+      "end_time": "14:50:00"
+    },
+    {
+      "id": 349234,
+      "subject_id": 620588,
+      "teacher_id": 857680,
+      "classroom_id": 762136,
+      "day_of_week": "Thursday",
+      "start_time": "15:55:00",
+      "end_time": "16:40:00"
+    },
+    {
+      "id": 542647,
+      "subject_id": 620588,
+      "teacher_id": 857680,
+      "classroom_id": 762136,
+      "day_of_week": "Wednesday",
+      "start_time": "11:00:00",
+      "end_time": "11:45:00"
+    },
+    {
+      "id": 189072,
+      "subject_id": 947695,
+      "teacher_id": 778823,
+      "classroom_id": 762136,
+      "day_of_week": "Monday",
+      "start_time": "14:05:00",
+      "end_time": "14:50:00"
+    },
+    {
+      "id": 803969,
+      "subject_id": 947695,
+      "teacher_id": 778823,
+      "classroom_id": 762136,
+      "day_of_week": "Friday",
+      "start_time": "13:20:00",
+      "end_time": "14:05:00"
+    },
+    {
+      "id": 603391,
+      "subject_id": 947695,
+      "teacher_id": 778823,
+      "classroom_id": 762136,
+      "day_of_week": "Wednesday",
+      "start_time": "15:55:00",
+      "end_time": "16:40:00"
+    },
+    {
+      "id": 439423,
+      "subject_id": 947695,
+      "teacher_id": 778823,
+      "classroom_id": 762136,
+      "day_of_week": "Saturday",
+      "start_time": "14:05:00",
+      "end_time": "14:50:00"
+    },
+    {
+      "id": 967644,
+      "subject_id": 947695,
+      "teacher_id": 778823,
+      "classroom_id": 762136,
+      "day_of_week": "Tuesday",
+      "start_time": "11:00:00",
+      "end_time": "11:45:00"
+    },
+    {
+      "id": 841723,
+      "subject_id": 947695,
+      "teacher_id": 778823,
+      "classroom_id": 762136,
+      "day_of_week": "Thursday",
+      "start_time": "11:45:00",
+      "end_time": "12:30:00"
+    },
+    {
+      "id": 667049,
+      "subject_id": 947695,
+      "teacher_id": 778823,
+      "classroom_id": 762136,
+      "day_of_week": "Friday",
+      "start_time": "11:00:00",
+      "end_time": "11:45:00"
+    },
+    {
+      "id": 465167,
+      "subject_id": 947695,
+      "teacher_id": 778823,
+      "classroom_id": 762136,
+      "day_of_week": "Thursday",
+      "start_time": "14:05:00",
+      "end_time": "14:50:00"
+    },
+    {
+      "id": 235030,
+      "subject_id": 474691,
+      "teacher_id": 403937,
+      "classroom_id": 762136,
+      "day_of_week": "Wednesday",
+      "start_time": "09:15:00",
+      "end_time": "10:00:00"
+    },
+    {
+      "id": 182529,
+      "subject_id": 474691,
+      "teacher_id": 403937,
+      "classroom_id": 762136,
+      "day_of_week": "Tuesday",
+      "start_time": "11:45:00",
+      "end_time": "12:30:00"
+    },
+    {
+      "id": 502271,
+      "subject_id": 474691,
+      "teacher_id": 403937,
+      "classroom_id": 762136,
+      "day_of_week": "Thursday",
+      "start_time": "10:00:00",
+      "end_time": "10:45:00"
+    },
+    {
+      "id": 807500,
+      "subject_id": 474691,
+      "teacher_id": 403937,
+      "classroom_id": 762136,
+      "day_of_week": "Friday",
+      "start_time": "10:00:00",
+      "end_time": "10:45:00"
+    },
+    {
+      "id": 761046,
+      "subject_id": 474691,
+      "teacher_id": 403937,
+      "classroom_id": 762136,
+      "day_of_week": "Saturday",
+      "start_time": "09:15:00",
+      "end_time": "10:00:00"
+    },
+    {
+      "id": 266533,
+      "subject_id": 474691,
+      "teacher_id": 403937,
+      "classroom_id": 762136,
+      "day_of_week": "Thursday",
+      "start_time": "13:20:00",
+      "end_time": "14:05:00"
+    },
+    {
+      "id": 226834,
+      "subject_id": 474691,
+      "teacher_id": 403937,
+      "classroom_id": 762136,
+      "day_of_week": "Monday",
+      "start_time": "13:20:00",
+      "end_time": "14:05:00"
+    },
+    {
+      "id": 504436,
+      "subject_id": 474691,
+      "teacher_id": 403937,
+      "classroom_id": 762136,
+      "day_of_week": "Tuesday",
+      "start_time": "13:20:00",
+      "end_time": "14:05:00"
+    },
+    {
+      "id": 194409,
+      "subject_id": 230479,
+      "teacher_id": 637454,
+      "classroom_id": 762136,
+      "day_of_week": "Saturday",
+      "start_time": "15:55:00",
+      "end_time": "16:40:00"
+    },
+    {
+      "id": 169066,
+      "subject_id": 230479,
+      "teacher_id": 637454,
+      "classroom_id": 762136,
+      "day_of_week": "Friday",
+      "start_time": "15:55:00",
+      "end_time": "16:40:00"
+    },
+    {
+      "id": 641719,
+      "subject_id": 230479,
+      "teacher_id": 637454,
+      "classroom_id": 762136,
+      "day_of_week": "Friday",
+      "start_time": "11:45:00",
+      "end_time": "12:30:00"
+    },
+    {
+      "id": 283615,
+      "subject_id": 230479,
+      "teacher_id": 637454,
+      "classroom_id": 762136,
+      "day_of_week": "Tuesday",
+      "start_time": "15:05:00",
+      "end_time": "15:50:00"
+    },
+    {
+      "id": 939003,
+      "subject_id": 230479,
+      "teacher_id": 637454,
+      "classroom_id": 762136,
+      "day_of_week": "Monday",
+      "start_time": "15:05:00",
+      "end_time": "15:50:00"
+    },
+    {
+      "id": 352037,
+      "subject_id": 230479,
+      "teacher_id": 637454,
+      "classroom_id": 762136,
+      "day_of_week": "Thursday",
+      "start_time": "11:00:00",
+      "end_time": "11:45:00"
+    },
+    {
+      "id": 278413,
+      "subject_id": 230479,
+      "teacher_id": 637454,
+      "classroom_id": 762136,
+      "day_of_week": "Saturday",
+      "start_time": "11:45:00",
+      "end_time": "12:30:00"
+    },
+    {
+      "id": 318321,
+      "subject_id": 230479,
+      "teacher_id": 637454,
+      "classroom_id": 762136,
+      "day_of_week": "Wednesday",
+      "start_time": "13:20:00",
+      "end_time": "14:05:00"
+    },
+    {
+      "id": 957342,
+      "subject_id": 639987,
+      "teacher_id": 443394,
+      "classroom_id": 271792,
+      "day_of_week": "Saturday",
+      "start_time": "09:15:00",
+      "end_time": "10:00:00"
+    },
+    {
+      "id": 473772,
+      "subject_id": 639987,
+      "teacher_id": 443394,
+      "classroom_id": 271792,
+      "day_of_week": "Monday",
+      "start_time": "13:20:00",
+      "end_time": "14:05:00"
+    },
+    {
+      "id": 96512,
+      "subject_id": 639987,
+      "teacher_id": 443394,
+      "classroom_id": 271792,
+      "day_of_week": "Tuesday",
+      "start_time": "10:00:00",
+      "end_time": "10:45:00"
+    },
+    {
+      "id": 960360,
+      "subject_id": 639987,
+      "teacher_id": 443394,
+      "classroom_id": 271792,
+      "day_of_week": "Thursday",
+      "start_time": "13:20:00",
+      "end_time": "14:05:00"
+    },
+    {
+      "id": 630555,
+      "subject_id": 639987,
+      "teacher_id": 443394,
+      "classroom_id": 271792,
+      "day_of_week": "Thursday",
+      "start_time": "11:00:00",
+      "end_time": "11:45:00"
+    },
+    {
+      "id": 461036,
+      "subject_id": 639987,
+      "teacher_id": 443394,
+      "classroom_id": 271792,
+      "day_of_week": "Monday",
+      "start_time": "15:55:00",
+      "end_time": "16:40:00"
+    },
+    {
+      "id": 62869,
+      "subject_id": 639987,
+      "teacher_id": 443394,
+      "classroom_id": 271792,
+      "day_of_week": "Wednesday",
+      "start_time": "11:00:00",
+      "end_time": "11:45:00"
+    },
+    {
+      "id": 96820,
+      "subject_id": 639987,
+      "teacher_id": 443394,
+      "classroom_id": 271792,
+      "day_of_week": "Friday",
+      "start_time": "11:00:00",
+      "end_time": "11:45:00"
+    },
+    {
+      "id": 457913,
+      "subject_id": 539620,
+      "teacher_id": 618631,
+      "classroom_id": 271792,
+      "day_of_week": "Tuesday",
+      "start_time": "13:20:00",
+      "end_time": "14:05:00"
+    },
+    {
+      "id": 958907,
+      "subject_id": 539620,
+      "teacher_id": 618631,
+      "classroom_id": 271792,
+      "day_of_week": "Thursday",
+      "start_time": "11:45:00",
+      "end_time": "12:30:00"
+    },
+    {
+      "id": 653865,
+      "subject_id": 539620,
+      "teacher_id": 618631,
+      "classroom_id": 271792,
+      "day_of_week": "Wednesday",
+      "start_time": "11:45:00",
+      "end_time": "12:30:00"
+    },
+    {
+      "id": 349956,
+      "subject_id": 539620,
+      "teacher_id": 618631,
+      "classroom_id": 271792,
+      "day_of_week": "Friday",
+      "start_time": "09:15:00",
+      "end_time": "10:00:00"
+    },
+    {
+      "id": 361168,
+      "subject_id": 539620,
+      "teacher_id": 618631,
+      "classroom_id": 271792,
+      "day_of_week": "Monday",
+      "start_time": "15:05:00",
+      "end_time": "15:50:00"
+    },
+    {
+      "id": 370358,
+      "subject_id": 539620,
+      "teacher_id": 618631,
+      "classroom_id": 271792,
+      "day_of_week": "Thursday",
+      "start_time": "14:05:00",
+      "end_time": "14:50:00"
+    },
+    {
+      "id": 878081,
+      "subject_id": 539620,
+      "teacher_id": 618631,
+      "classroom_id": 271792,
+      "day_of_week": "Tuesday",
+      "start_time": "11:00:00",
+      "end_time": "11:45:00"
+    },
+    {
+      "id": 153522,
+      "subject_id": 539620,
+      "teacher_id": 618631,
+      "classroom_id": 271792,
+      "day_of_week": "Friday",
+      "start_time": "14:05:00",
+      "end_time": "14:50:00"
+    },
+    {
+      "id": 983653,
+      "subject_id": 620588,
+      "teacher_id": 857680,
+      "classroom_id": 271792,
+      "day_of_week": "Thursday",
+      "start_time": "10:00:00",
+      "end_time": "10:45:00"
+    },
+    {
+      "id": 244249,
+      "subject_id": 620588,
+      "teacher_id": 857680,
+      "classroom_id": 271792,
+      "day_of_week": "Monday",
+      "start_time": "11:00:00",
+      "end_time": "11:45:00"
+    },
+    {
+      "id": 201687,
+      "subject_id": 620588,
+      "teacher_id": 857680,
+      "classroom_id": 271792,
+      "day_of_week": "Tuesday",
+      "start_time": "15:05:00",
+      "end_time": "15:50:00"
+    },
+    {
+      "id": 530075,
+      "subject_id": 620588,
+      "teacher_id": 857680,
+      "classroom_id": 271792,
+      "day_of_week": "Saturday",
+      "start_time": "11:45:00",
+      "end_time": "12:30:00"
+    },
+    {
+      "id": 295704,
+      "subject_id": 620588,
+      "teacher_id": 857680,
+      "classroom_id": 271792,
+      "day_of_week": "Monday",
+      "start_time": "14:05:00",
+      "end_time": "14:50:00"
+    },
+    {
+      "id": 232470,
+      "subject_id": 620588,
+      "teacher_id": 857680,
+      "classroom_id": 271792,
+      "day_of_week": "Tuesday",
+      "start_time": "11:45:00",
+      "end_time": "12:30:00"
+    },
+    {
+      "id": 880622,
+      "subject_id": 620588,
+      "teacher_id": 857680,
+      "classroom_id": 271792,
+      "day_of_week": "Wednesday",
+      "start_time": "10:00:00",
+      "end_time": "10:45:00"
+    },
+    {
+      "id": 492273,
+      "subject_id": 620588,
+      "teacher_id": 857680,
+      "classroom_id": 271792,
+      "day_of_week": "Friday",
+      "start_time": "15:05:00",
+      "end_time": "15:50:00"
+    },
+    {
+      "id": 844576,
+      "subject_id": 947695,
+      "teacher_id": 778823,
+      "classroom_id": 271792,
+      "day_of_week": "Wednesday",
+      "start_time": "15:05:00",
+      "end_time": "15:50:00"
+    },
+    {
+      "id": 912800,
+      "subject_id": 947695,
+      "teacher_id": 778823,
+      "classroom_id": 271792,
+      "day_of_week": "Saturday",
+      "start_time": "11:00:00",
+      "end_time": "11:45:00"
+    },
+    {
+      "id": 237213,
+      "subject_id": 947695,
+      "teacher_id": 778823,
+      "classroom_id": 271792,
+      "day_of_week": "Saturday",
+      "start_time": "15:55:00",
+      "end_time": "16:40:00"
+    },
+    {
+      "id": 782556,
+      "subject_id": 947695,
+      "teacher_id": 778823,
+      "classroom_id": 271792,
+      "day_of_week": "Monday",
+      "start_time": "09:15:00",
+      "end_time": "10:00:00"
+    },
+    {
+      "id": 634171,
+      "subject_id": 947695,
+      "teacher_id": 778823,
+      "classroom_id": 271792,
+      "day_of_week": "Tuesday",
+      "start_time": "09:15:00",
+      "end_time": "10:00:00"
+    },
+    {
+      "id": 251192,
+      "subject_id": 947695,
+      "teacher_id": 778823,
+      "classroom_id": 271792,
+      "day_of_week": "Friday",
+      "start_time": "15:55:00",
+      "end_time": "16:40:00"
+    },
+    {
+      "id": 931450,
+      "subject_id": 947695,
+      "teacher_id": 778823,
+      "classroom_id": 271792,
+      "day_of_week": "Wednesday",
+      "start_time": "09:15:00",
+      "end_time": "10:00:00"
+    },
+    {
+      "id": 832073,
+      "subject_id": 947695,
+      "teacher_id": 778823,
+      "classroom_id": 271792,
+      "day_of_week": "Monday",
+      "start_time": "11:45:00",
+      "end_time": "12:30:00"
+    },
+    {
+      "id": 861392,
+      "subject_id": 474691,
+      "teacher_id": 403937,
+      "classroom_id": 271792,
+      "day_of_week": "Thursday",
+      "start_time": "15:55:00",
+      "end_time": "16:40:00"
+    },
+    {
+      "id": 200795,
+      "subject_id": 474691,
+      "teacher_id": 403937,
+      "classroom_id": 271792,
+      "day_of_week": "Saturday",
+      "start_time": "13:20:00",
+      "end_time": "14:05:00"
+    },
+    {
+      "id": 180937,
+      "subject_id": 474691,
+      "teacher_id": 403937,
+      "classroom_id": 271792,
+      "day_of_week": "Friday",
+      "start_time": "11:45:00",
+      "end_time": "12:30:00"
+    },
+    {
+      "id": 20793,
+      "subject_id": 474691,
+      "teacher_id": 403937,
+      "classroom_id": 271792,
+      "day_of_week": "Wednesday",
+      "start_time": "14:05:00",
+      "end_time": "14:50:00"
+    },
+    {
+      "id": 81373,
+      "subject_id": 474691,
+      "teacher_id": 403937,
+      "classroom_id": 271792,
+      "day_of_week": "Thursday",
+      "start_time": "09:15:00",
+      "end_time": "10:00:00"
+    },
+    {
+      "id": 840064,
+      "subject_id": 474691,
+      "teacher_id": 403937,
+      "classroom_id": 271792,
+      "day_of_week": "Saturday",
+      "start_time": "14:05:00",
+      "end_time": "14:50:00"
+    },
+    {
+      "id": 416851,
+      "subject_id": 474691,
+      "teacher_id": 403937,
+      "classroom_id": 271792,
+      "day_of_week": "Tuesday",
+      "start_time": "15:55:00",
+      "end_time": "16:40:00"
+    },
+    {
+      "id": 373891,
+      "subject_id": 474691,
+      "teacher_id": 403937,
+      "classroom_id": 271792,
+      "day_of_week": "Wednesday",
+      "start_time": "13:20:00",
+      "end_time": "14:05:00"
+    },
+    {
+      "id": 380467,
+      "subject_id": 230479,
+      "teacher_id": 637454,
+      "classroom_id": 271792,
+      "day_of_week": "Tuesday",
+      "start_time": "14:05:00",
+      "end_time": "14:50:00"
+    },
+    {
+      "id": 126986,
+      "subject_id": 230479,
+      "teacher_id": 637454,
+      "classroom_id": 271792,
+      "day_of_week": "Friday",
+      "start_time": "10:00:00",
+      "end_time": "10:45:00"
+    },
+    {
+      "id": 987561,
+      "subject_id": 230479,
+      "teacher_id": 637454,
+      "classroom_id": 271792,
+      "day_of_week": "Saturday",
+      "start_time": "10:00:00",
+      "end_time": "10:45:00"
+    },
+    {
+      "id": 680274,
+      "subject_id": 230479,
+      "teacher_id": 637454,
+      "classroom_id": 271792,
+      "day_of_week": "Saturday",
+      "start_time": "15:05:00",
+      "end_time": "15:50:00"
+    },
+    {
+      "id": 385022,
+      "subject_id": 230479,
+      "teacher_id": 637454,
+      "classroom_id": 271792,
+      "day_of_week": "Thursday",
+      "start_time": "15:05:00",
+      "end_time": "15:50:00"
+    },
+    {
+      "id": 95245,
+      "subject_id": 230479,
+      "teacher_id": 637454,
+      "classroom_id": 271792,
+      "day_of_week": "Wednesday",
+      "start_time": "15:55:00",
+      "end_time": "16:40:00"
+    },
+    {
+      "id": 479798,
+      "subject_id": 230479,
+      "teacher_id": 637454,
+      "classroom_id": 271792,
+      "day_of_week": "Monday",
+      "start_time": "10:00:00",
+      "end_time": "10:45:00"
+    },
+    {
+      "id": 65249,
+      "subject_id": 230479,
+      "teacher_id": 637454,
+      "classroom_id": 271792,
+      "day_of_week": "Friday",
+      "start_time": "13:20:00",
+      "end_time": "14:05:00"
+    }
+  ]
+}
