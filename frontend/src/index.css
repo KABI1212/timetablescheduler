@@ -3,50 +3,310 @@
 @tailwind utilities;
 
 @layer base {
+  :root {
+    --primary: #f4c430;
+    --primary-glow: #38d9ff;
+    --accent: #fff6d8;
+    --bg-dark: #050505;
+    --bg-card: #111111;
+    --border-glow: rgba(244, 196, 48, 0.35);
+    --text-primary: #ffffff;
+    --text-secondary: #f1e3a4;
+    --success: #2ad66b;
+    --warning: #f4c430;
+    --danger: #ff4d4d;
+    --lab-teal: #38d9ff;
+  }
+
   body {
-    background-color: #0a0a0c;
+    background-color: var(--bg-dark);
+    color: var(--text-primary);
+    font-family: 'Manrope', system-ui, -apple-system, sans-serif;
+  }
+
+  h1,
+  h2,
+  h3,
+  h4,
+  h5,
+  h6 {
+    font-family: 'Orbitron', 'Manrope', sans-serif;
+  }
+
+  button,
+  a,
+  input,
+  select,
+  textarea {
+    transition: all 0.2s ease;
+  }
+}
+
+@layer components {
+  .glassmorphism,
+  .card-glass {
+    background: linear-gradient(145deg, rgba(22, 22, 22, 0.94), rgba(8, 8, 8, 0.9));
+    backdrop-filter: blur(18px);
+    border: 1px solid var(--border-glow);
+    box-shadow:
+      0 18px 45px rgba(0, 0, 0, 0.45),
+      inset 0 1px 0 rgba(255, 255, 255, 0.03),
+      0 0 0 1px rgba(56, 217, 255, 0.05);
+  }
+
+  .btn-primary {
+    background: linear-gradient(135deg, #f4c430, #ffd85f);
+    color: #090909;
+    box-shadow: 0 10px 24px rgba(244, 196, 48, 0.25);
+    border: 1px solid rgba(255, 233, 145, 0.45);
+  }
+
+  .btn-primary:hover {
+    box-shadow: 0 0 18px rgba(244, 196, 48, 0.55);
+  }
+
+  .btn-outline {
+    background: linear-gradient(135deg, rgba(255, 255, 255, 0.04), rgba(255, 255, 255, 0.01));
+    border: 1px solid rgba(244, 196, 48, 0.28);
+    color: #ffffff;
+  }
+
+  .btn-outline:hover {
+    border-color: rgba(56, 217, 255, 0.55);
+    box-shadow: 0 0 16px rgba(56, 217, 255, 0.25);
+  }
+
+  .btn-danger {
+    background: linear-gradient(135deg, rgba(255, 77, 77, 0.85), rgba(180, 22, 22, 0.95));
+    color: #ffffff;
+    border: 1px solid var(--danger);
+    box-shadow: 0 0 16px rgba(255, 77, 77, 0.2);
+  }
+
+  .btn-danger:hover {
+    box-shadow: 0 0 16px rgba(255, 77, 77, 0.45);
+  }
+
+  .btn-success {
+    background: linear-gradient(135deg, rgba(42, 214, 107, 0.88), rgba(18, 135, 67, 0.95));
+    color: #07110a;
+    border: 1px solid var(--success);
+    box-shadow: 0 0 16px rgba(42, 214, 107, 0.2);
+  }
+
+  .btn-success:hover {
+    box-shadow: 0 0 16px rgba(42, 214, 107, 0.45);
+  }
+
+  .btn-icon {
+    background: linear-gradient(135deg, rgba(244, 196, 48, 0.18), rgba(56, 217, 255, 0.12));
+    color: #ffffff;
+    border: 1px solid rgba(244, 196, 48, 0.35);
+    box-shadow: 0 0 16px rgba(244, 196, 48, 0.12);
+  }
+
+  .btn-icon:hover {
+    box-shadow: 0 0 16px rgba(244, 196, 48, 0.3);
+  }
+
+  .btn-state {
+    background: linear-gradient(135deg, rgba(244, 196, 48, 0.18), rgba(56, 217, 255, 0.1));
+    color: #ffffff;
+    border: 1px solid rgba(244, 196, 48, 0.35);
+    box-shadow: 0 0 16px rgba(244, 196, 48, 0.12);
+  }
+
+  .btn-state-available {
+    background:
+      linear-gradient(135deg, rgba(42, 214, 107, 0.72), rgba(21, 102, 53, 0.76)),
+      rgba(42, 214, 107, 0.18);
+    border-color: rgba(42, 214, 107, 0.6);
+  }
+
+  .btn-state-unavailable {
+    background:
+      linear-gradient(135deg, rgba(255, 77, 77, 0.7), rgba(139, 22, 22, 0.74)),
+      rgba(255, 77, 77, 0.2);
+    border-color: rgba(255, 77, 77, 0.55);
+  }
+
+  .btn-state-available:hover,
+  .btn-state-unavailable:hover {
+    box-shadow: 0 0 16px rgba(244, 196, 48, 0.25);
+  }
+
+  .input-quantum {
+    background: rgba(12, 12, 12, 0.9);
+    border: 1px solid rgba(244, 196, 48, 0.18);
+    color: var(--text-primary);
+  }
+
+  .input-quantum:focus {
+    outline: none;
+    border-color: var(--primary-glow);
+    box-shadow: 0 0 12px rgba(56, 217, 255, 0.35);
+  }
+
+  .skeleton {
+    position: relative;
+    overflow: hidden;
+    background: rgba(255, 255, 255, 0.05);
+    border-radius: 0.75rem;
+  }
+
+  .skeleton::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    transform: translateX(-100%);
+    background: linear-gradient(90deg, transparent, rgba(244, 196, 48, 0.18), transparent);
+    animation: skeleton 1.5s infinite;
+  }
+
+  .toast-base {
+    backdrop-filter: blur(12px);
+    border: 1px solid var(--border-glow);
+    box-shadow: 0 0 18px rgba(244, 196, 48, 0.18);
+  }
+
+  .toast-success {
+    border-color: rgba(42, 214, 107, 0.5);
+    box-shadow: 0 0 18px rgba(42, 214, 107, 0.25);
+  }
+
+  .toast-danger {
+    border-color: rgba(255, 77, 77, 0.5);
+    box-shadow: 0 0 18px rgba(255, 77, 77, 0.25);
+  }
+
+  .brand-lockup {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.9rem;
+  }
+
+  .brand-lockup-compact {
+    gap: 0.7rem;
+  }
+
+  .brand-mark {
+    position: relative;
+    width: 4rem;
+    height: 4rem;
+    flex: 0 0 auto;
+    filter: drop-shadow(0 0 22px rgba(56, 217, 255, 0.14));
+  }
+
+  .brand-mark-compact {
+    width: 2.75rem;
+    height: 2.75rem;
+  }
+
+  .brand-core,
+  .brand-orbit,
+  .brand-flare {
+    position: absolute;
+    inset: 0;
+  }
+
+  .brand-core {
+    inset: 22%;
+    border-radius: 9999px;
+    background:
+      radial-gradient(circle, rgba(255, 255, 255, 0.98) 0%, rgba(255, 255, 255, 0.88) 16%, rgba(56, 217, 255, 0.55) 40%, rgba(244, 196, 48, 0.45) 68%, rgba(255, 77, 77, 0.22) 100%);
+    box-shadow:
+      0 0 24px rgba(255, 255, 255, 0.24),
+      0 0 40px rgba(56, 217, 255, 0.2);
+  }
+
+  .brand-orbit {
+    inset: 10%;
+    border: 2px solid rgba(255, 255, 255, 0.82);
+    border-radius: 9999px;
+  }
+
+  .brand-orbit-a {
+    transform: rotate(18deg) scaleX(1.2);
+    border-color: rgba(244, 196, 48, 0.95);
+  }
+
+  .brand-orbit-b {
+    transform: rotate(-46deg) scaleX(1.18);
+    border-color: rgba(56, 217, 255, 0.92);
+  }
+
+  .brand-orbit-c {
+    transform: rotate(74deg) scaleX(1.08);
+    border-color: rgba(255, 77, 77, 0.75);
+  }
+
+  .brand-flare {
+    inset: auto;
+    width: 0.5rem;
+    height: 0.5rem;
+    top: 0.55rem;
+    right: 0.45rem;
+    border-radius: 9999px;
+    background: #ffffff;
+    box-shadow:
+      0 0 12px rgba(255, 255, 255, 0.85),
+      0 0 22px rgba(244, 196, 48, 0.6);
+  }
+
+  .brand-wordmark {
+    font-family: 'Orbitron', 'Manrope', sans-serif;
+    font-size: clamp(1.45rem, 2vw, 2.8rem);
+    font-weight: 800;
+    letter-spacing: 0.22em;
+    text-transform: uppercase;
+    line-height: 1;
+    background: linear-gradient(135deg, #ffffff 0%, #f4c430 38%, #38d9ff 72%, #ff4d4d 100%);
+    -webkit-background-clip: text;
+    background-clip: text;
+    color: transparent;
+  }
+
+  .brand-lockup-compact .brand-wordmark {
+    font-size: 1.1rem;
+    letter-spacing: 0.18em;
+  }
+
+  .brand-tagline {
+    margin-top: 0.28rem;
+    font-size: 0.68rem;
+    letter-spacing: 0.32em;
+    text-transform: uppercase;
+    color: rgba(255, 246, 216, 0.72);
+  }
+
+  .brand-lockup-compact .brand-tagline {
+    font-size: 0.58rem;
+    letter-spacing: 0.24em;
   }
 }
 
 @layer utilities {
-  .glassmorphism {
-    @apply bg-cyberGray/40 backdrop-blur-md border border-white/10 shadow-lg;
+  .text-secondary {
+    color: var(--text-secondary);
   }
 
-  .scanline {
-    width: 100%;
-    height: 100px;
-    z-index: 10;
-    pointer-events: none;
-    position: absolute;
-    top: 0;
-    left: 0;
-    background: linear-gradient(to bottom, transparent 0%, rgba(0, 243, 255, 0.1) 50%, transparent 100%);
-    animation: scanline 8s linear infinite;
+  .bg-break {
+    background: rgba(18, 18, 18, 0.88);
   }
 
-  @keyframes scanline {
-    0% {
-      top: -100px;
-    }
-
-    100% {
-      top: 100%;
-    }
+  .bg-shell {
+    background:
+      radial-gradient(circle at 18% 16%, rgba(244, 196, 48, 0.14), transparent 34%),
+      radial-gradient(circle at 82% 12%, rgba(255, 77, 77, 0.12), transparent 30%),
+      radial-gradient(circle at 74% 70%, rgba(42, 214, 107, 0.12), transparent 30%),
+      radial-gradient(circle at 42% 50%, rgba(56, 217, 255, 0.1), transparent 34%),
+      var(--bg-dark);
   }
+}
 
-  .terminal-flicker {
-    animation: flicker 0.15s infinite;
-  }
-
-  @keyframes flicker {
-    0% {
-      opacity: 0.97;
-    }
-
-    100% {
-      opacity: 1;
-    }
+@keyframes skeleton {
+  100% {
+    transform: translateX(100%);
   }
 }
 
@@ -55,25 +315,24 @@
 }
 
 ::-webkit-scrollbar-track {
-  background: #0a0a0c;
+  background: #090909;
 }
 
 ::-webkit-scrollbar-thumb {
-  background: #00f3ff;
+  background: rgba(244, 196, 48, 0.5);
   border-radius: 4px;
 }
 
 ::-webkit-scrollbar-thumb:hover {
-  background: #b026ff;
+  background: rgba(56, 217, 255, 0.72);
 }
 
-/* PDF Export Mode (Black & White with Colored Subject Blocks) */
+/* PDF Export Mode */
 .pdf-export-mode {
   background-color: white !important;
   color: black !important;
   border: none !important;
   box-shadow: none !important;
-  /* Make sure it scales within an A4 landscape width */
   width: 1600px !important;
   padding: 0 !important;
   margin: 0 auto !important;
@@ -86,7 +345,7 @@
   table-layout: fixed !important;
 }
 
-.pdf-export-mode th, 
+.pdf-export-mode th,
 .pdf-export-mode td {
   border: 1px solid #000 !important;
   background-color: white !important;
@@ -95,24 +354,8 @@
   height: auto !important;
 }
 
-/* Shrink text for printing */
-.pdf-export-mode .text-xs,
-.pdf-export-mode .text-sm,
-.pdf-export-mode .font-bold {
-  font-size: 10px !important;
-  line-height: 1.1 !important;
-}
-
-.pdf-export-mode .text-\[11px\],
-.pdf-export-mode .text-\[9px\],
-.pdf-export-mode .text-\[10px\],
-.pdf-export-mode .text-[8px] {
-  font-size: 8px !important;
-}
-
-/* Override neon text colors in table headers/rows */
-.pdf-export-mode .text-neonCyan,
-.pdf-export-mode .text-neonPurple {
+.pdf-export-mode .text-secondary,
+.pdf-export-mode .text-white {
   color: black !important;
 }
 
@@ -120,30 +363,7 @@
   background-color: #f8f8f8 !important;
 }
 
-/* Keep break periods subtly distinct but grayscale */
-.pdf-export-mode .bg-cyberBlack\/80 {
+.pdf-export-mode .bg-break {
   background-color: #eeeeee !important;
   color: #333 !important;
-}
-
-/* Neutralize gray text */
-.pdf-export-mode .text-gray-400,
-.pdf-export-mode .text-gray-500,
-.pdf-export-mode .text-gray-600 {
-  color: #444 !important;
-}
-
-/* Prevent white text on white background */
-.pdf-export-mode .text-white {
-  color: black !important;
-}
-
-/* Keep the actual Subject Blocks colored (but printable friendly) */
-.pdf-export-mode .bg-neonPurple\/10 {
-  background-color: #f3e8ff !important; /* Tailwind purple-100 */
-  border-left-color: #9333ea !important; /* Tailwind purple-600 */
-}
-
-.pdf-export-mode .text-neonPurple.opacity-80 {
-  color: #7e22ce !important; /* Darker purple for room name string */
 }

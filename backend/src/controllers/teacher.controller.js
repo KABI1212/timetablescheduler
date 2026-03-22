@@ -49,3 +49,23 @@ exports.deleteTeacher = async (req, res) => {
         res.status(500).json({ error: 'Server error' });
     }
 };
+
+/**
+ * @param {import('express').Request} req
+ * @param {import('express').Response} res
+ */
+exports.updateTeacher = async (req, res) => {
+    try {
+        const { id } = req.params;
+        const { max_hours_per_week } = req.body;
+        const result = await db.query(
+            'UPDATE teachers SET max_hours_per_week = $1 WHERE id = $2 RETURNING *',
+            [max_hours_per_week, id]
+        );
+        if (result.rows.length === 0) return res.status(404).json({ error: 'Teacher not found' });
+        res.json(result.rows[0]);
+    } catch (err) {
+        console.error(err);
+        res.status(500).json({ error: 'Server error' });
+    }
+};

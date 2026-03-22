@@ -7,16 +7,29 @@ export default {
     theme: {
         extend: {
             colors: {
-                neonCyan: '#00f3ff',
-                neonPink: '#ff003c',
-                neonPurple: '#b026ff',
-                cyberBlack: '#0a0a0c',
-                cyberGray: '#1a1a1f'
+                primary: '#F4C430',
+                primaryGlow: '#38D9FF',
+                accent: '#FFF6D8',
+                bgDark: '#050505',
+                bgCard: '#111111',
+                borderGlow: '#F4C43055',
+                textPrimary: '#FFFFFF',
+                textSecondary: '#F1E3A4',
+                success: '#2AD66B',
+                warning: '#F4C430',
+                danger: '#FF4D4D',
+                labTeal: '#38D9FF'
             },
             boxShadow: {
-                'neon-cyan': '0 0 10px #00f3ff, 0 0 20px #00f3ff',
-                'neon-pink': '0 0 10px #ff003c, 0 0 20px #ff003c',
-                'neon-purple': '0 0 10px #b026ff, 0 0 20px #b026ff',
+                'blue-glow': '0 0 30px rgba(244, 196, 48, 0.18)',
+                'blue-glow-strong': '0 0 18px rgba(244, 196, 48, 0.55)',
+                'success-glow': '0 0 18px rgba(42, 214, 107, 0.35)',
+                'warning-glow': '0 0 18px rgba(244, 196, 48, 0.35)',
+                'danger-glow': '0 0 18px rgba(255, 77, 77, 0.35)'
+            },
+            fontFamily: {
+                body: ['Manrope', 'system-ui', 'sans-serif'],
+                heading: ['Orbitron', 'Manrope', 'sans-serif']
             }
         },
     },

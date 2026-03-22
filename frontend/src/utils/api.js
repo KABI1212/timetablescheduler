@@ -1,5 +1,10 @@
 export const API_URL = 'http://localhost:5000/api';
 
+const clearAuthState = () => {
+    localStorage.removeItem('chrono_token');
+    localStorage.removeItem('chrono_user');
+};
+
 const getAuthHeaders = () => {
     const token = localStorage.getItem('chrono_token');
     return {
@@ -23,7 +28,19 @@ export const apiFetch = async (endpoint, options = {}) => {
 
     const data = await response.json();
     if (!response.ok) {
-        throw new Error(data.error || 'API Request Failed');
+        const message = data.error || 'API Request Failed';
+        const isAuthFailure = response.status === 401
+            && endpoint !== '/auth/login'
+            && endpoint !== '/auth/register';
+
+        if (isAuthFailure) {
+            clearAuthState();
+            if (window.location.pathname !== '/login') {
+                window.location.href = '/login';
+            }
+            throw new Error('Session expired. Please sign in again.');
+        }
+        throw new Error(message);
     }
     return data;
 };
@@ -33,10 +50,10 @@ export const apiFetch = async (endpoint, options = {}) => {
  * @param {string} email
  * @param {string} password
  */
-export const login = async (email, password) => {
+export const login = async (email, password, role) => {
     const data = await apiFetch('/auth/login', {
         method: 'POST',
-        body: JSON.stringify({ email, password })
+        body: JSON.stringify({ email, password, role })
     });
     localStorage.setItem('chrono_token', data.token);
     localStorage.setItem('chrono_user', JSON.stringify(data.user));
@@ -44,7 +61,6 @@ export const login = async (email, password) => {
 };
 
 export const logout = () => {
-    localStorage.removeItem('chrono_token');
-    localStorage.removeItem('chrono_user');
+    clearAuthState();
     window.location.href = '/login';
 };

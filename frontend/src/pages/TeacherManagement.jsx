@@ -1,11 +1,21 @@
 import React, { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { apiFetch } from '../utils/api';
+import { useToast } from '../components/ToastProvider';
+
+const defaultForm = {
+    name: '',
+    email: '',
+    max_hours_per_week: '20'
+};
 
 const TeacherManagement = () => {
-    /** @type {[any, any]} */
-    const [teachers, setTeachers] = useState([]);
+    const [teachers, setTeachers] = useState(/** @type {any[]} */([]));
     const [loading, setLoading] = useState(true);
+    const [form, setForm] = useState(defaultForm);
+    const [errors, setErrors] = useState(/** @type {Record<string, string>} */ ({}));
+    const [editingId, setEditingId] = useState(/** @type {number | null} */ (null));
+    const toast = useToast();
 
     useEffect(() => {
         loadTeachers();
@@ -17,50 +27,77 @@ const TeacherManagement = () => {
             setTeachers(data);
         } catch (err) {
             const error = /** @type {Error} */ (err);
-            console.error("Failed to fetch personnel", error);
+            toast.error(error.message || 'Failed to fetch teachers');
         } finally {
             setLoading(false);
         }
     };
 
-    /**
-     * @param {any} id
-     */
-    const handleDelete = async (id) => {
-        if (!window.confirm("ARE YOU SURE YOU WANT TO TERMINATE THIS PERSONNEL LINK?")) return;
+    const validate = () => {
+        /** @type {Record<string, string>} */
+        const nextErrors = {};
+        if (!editingId && !form.name.trim()) nextErrors.name = 'Name is required.';
+        if (!editingId && !form.email.trim()) nextErrors.email = 'Email is required.';
+        if (!form.max_hours_per_week || Number.isNaN(Number(form.max_hours_per_week))) nextErrors.max_hours_per_week = 'Max hours must be a number.';
+        setErrors(nextErrors);
+        return Object.keys(nextErrors).length === 0;
+    };
+
+    const resetForm = () => {
+        setForm(defaultForm);
+        setErrors({});
+        setEditingId(null);
+    };
+
+    const handleSubmit = async (e) => {
+        e.preventDefault();
+        if (!validate()) return;
         try {
-            await apiFetch(`/teachers/${id}`, { method: 'DELETE' });
-            setTeachers(teachers.filter((/** @type {any} */ t) => t.id !== id));
+            if (editingId) {
+                await apiFetch(`/teachers/${editingId}`, {
+                    method: 'PUT',
+                    body: JSON.stringify({ max_hours_per_week: parseInt(form.max_hours_per_week, 10) })
+                });
+                toast.success('Teacher updated');
+            } else {
+                const regRes = await apiFetch('/auth/register', {
+                    method: 'POST',
+                    body: JSON.stringify({ name: form.name.trim(), email: form.email.trim(), password: 'password123', role: 'teacher' })
+                });
+                await apiFetch('/teachers', {
+                    method: 'POST',
+                    body: JSON.stringify({ user_id: regRes.user.id, max_hours_per_week: parseInt(form.max_hours_per_week, 10) })
+                });
+                toast.success('Teacher added');
+            }
+            resetForm();
+            loadTeachers();
         } catch (err) {
             const error = /** @type {Error} */ (err);
-            console.error("Termination failed", error);
-            alert("SYSTEM ERROR: Termination sequence aborted.");
+            toast.error(error.message || 'Save failed');
         }
     };
 
-    const handleAdd = async () => {
-        const name = window.prompt("ENTER PERSONNEL NAME:");
-        if (!name) return;
-        const email = window.prompt("ENTER CONTACT EMAIL:");
-        if (!email) return;
+    const handleEdit = (teacher) => {
+        setEditingId(teacher.id);
+        setForm({
+            name: teacher.name || '',
+            email: teacher.email || '',
+            max_hours_per_week: String(teacher.max_hours_per_week || 20)
+        });
+        setErrors({});
+    };
 
+    /** @param {any} id */
+    const handleDelete = async (id) => {
+        if (!window.confirm("Are you sure you want to remove this teacher?")) return;
         try {
-            // First, register the teacher as a user to get a valid user_id
-            const regRes = await apiFetch('/auth/register', {
-                method: 'POST',
-                body: JSON.stringify({ name, email, password: 'password123', role: 'teacher' })
-            });
-
-            // Then link the new user as a teacher
-            await apiFetch('/teachers', {
-                method: 'POST',
-                body: JSON.stringify({ user_id: regRes.user.id, max_hours_per_week: 20 })
-            });
-            loadTeachers();
-            alert("PERSONNEL INTEGRATED SUCCESSFULLY.");
+            await apiFetch(`/teachers/${id}`, { method: 'DELETE' });
+            toast.success('Teacher removed');
+            setTeachers(teachers.filter((t) => t.id !== id));
         } catch (err) {
             const error = /** @type {Error} */ (err);
-            console.error("Integration failed", error);
+            toast.error(error.message || 'Delete failed');
         }
     };
 
@@ -70,61 +107,108 @@ const TeacherManagement = () => {
             animate={{ opacity: 1, y: 0 }}
             className="space-y-6"
         >
-            <div className="flex justify-between items-center">
-                <h1 className="text-3xl font-bold text-neonCyan drop-shadow-sm">
-                    Teacher Personnel
-                </h1>
-                <button
-                    onClick={handleAdd}
-                    className="px-4 py-2 bg-neonPurple text-white rounded-lg shadow-neon-purple hover:bg-neonPink hover:shadow-neon-pink transition-all font-bold tracking-wider"
-                >
-                    + Add Personnel
-                </button>
+            <div>
+                <h1 className="text-3xl font-bold text-white">Teachers</h1>
+                <p className="text-secondary text-sm">Manage faculty profiles and workloads</p>
             </div>
 
-            <div className="glassmorphism rounded-xl overflow-hidden border border-white/10">
+            <div className="card-glass rounded-2xl p-6">
+                <h2 className="text-lg font-semibold text-white mb-4">
+                    {editingId ? 'Edit Teacher Workload' : 'Add Teacher'}
+                </h2>
+                <form onSubmit={handleSubmit} className="grid grid-cols-1 md:grid-cols-4 gap-4">
+                    <div className="md:col-span-1">
+                        <label className="block text-secondary text-sm mb-2">Name</label>
+                        <input
+                            disabled={Boolean(editingId)}
+                            className="w-full input-quantum p-3 rounded-lg disabled:opacity-50"
+                            value={form.name}
+                            onChange={(e) => setForm({ ...form, name: e.target.value })}
+                        />
+                        {errors.name && <p className="text-danger text-xs mt-1">{errors.name}</p>}
+                    </div>
+                    <div className="md:col-span-1">
+                        <label className="block text-secondary text-sm mb-2">Email</label>
+                        <input
+                            disabled={Boolean(editingId)}
+                            className="w-full input-quantum p-3 rounded-lg disabled:opacity-50"
+                            value={form.email}
+                            onChange={(e) => setForm({ ...form, email: e.target.value })}
+                        />
+                        {errors.email && <p className="text-danger text-xs mt-1">{errors.email}</p>}
+                    </div>
+                    <div className="md:col-span-1">
+                        <label className="block text-secondary text-sm mb-2">Max Hours/Week</label>
+                        <input
+                            type="number"
+                            className="w-full input-quantum p-3 rounded-lg"
+                            value={form.max_hours_per_week}
+                            onChange={(e) => setForm({ ...form, max_hours_per_week: e.target.value })}
+                        />
+                        {errors.max_hours_per_week && <p className="text-danger text-xs mt-1">{errors.max_hours_per_week}</p>}
+                    </div>
+                    <div className="md:col-span-1 flex items-end gap-3">
+                        <button type="submit" className="btn-primary px-6 py-3 rounded-lg font-semibold">
+                            {editingId ? 'Update' : 'Add'}
+                        </button>
+                        {editingId && (
+                            <button type="button" onClick={resetForm} className="btn-outline px-4 py-3 rounded-lg text-sm">
+                                Cancel
+                            </button>
+                        )}
+                    </div>
+                </form>
+            </div>
+
+            <div className="card-glass rounded-2xl overflow-hidden">
                 {loading ? (
-                    <div className="p-8 text-center text-neonCyan font-mono animate-pulse">Syncing Personnel Data...</div>
+                    <div className="p-8">
+                        <div className="h-10 skeleton mb-4" />
+                        <div className="h-10 skeleton mb-4" />
+                        <div className="h-10 skeleton" />
+                    </div>
                 ) : (
-                    <table className="w-full text-left">
-                        <thead className="bg-white/5 border-b border-white/10 text-neonCyan font-mono">
-                            <tr>
-                                <th className="p-4">ID</th>
-                                <th className="p-4">Name</th>
-                                <th className="p-4">Email Contact</th>
-                                <th className="p-4">Max Hours/Week</th>
-                                <th className="p-4 text-right">Actions</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            {teachers.length === 0 && (
-                                <tr><td colSpan={5} className="p-4 text-center text-gray-400">No personnel records found in core database.</td></tr>
-                            )}
-                            {teachers.map((/** @type {any} */ teacher, /** @type {number} */ i) => (
-                                <motion.tr
-                                    initial={{ opacity: 0, x: -20 }}
-                                    animate={{ opacity: 1, x: 0 }}
-                                    transition={{ delay: i * 0.1 }}
-                                    key={teacher.id}
-                                    className="border-b border-white/5 hover:bg-white/5 transition-colors"
-                                >
-                                    <td className="p-4 text-gray-400 font-mono">#{teacher.id}</td>
-                                    <td className="p-4 font-semibold">{teacher.name}</td>
-                                    <td className="p-4 text-gray-300">{teacher.email}</td>
-                                    <td className="p-4 text-neonPink font-mono">{teacher.max_hours_per_week}H</td>
-                                    <td className="p-4 text-right space-x-3">
-                                        <button className="text-neonCyan hover:text-white transition-colors">Edit</button>
-                                        <button
-                                            onClick={() => handleDelete(teacher.id)}
-                                            className="text-neonPink hover:text-white transition-colors"
-                                        >
-                                            Terminate
-                                        </button>
-                                    </td>
-                                </motion.tr>
-                            ))}
-                        </tbody>
-                    </table>
+                    <div className="overflow-x-auto">
+                        <table className="w-full min-w-[720px] text-left">
+                            <thead className="bg-white/5 border-b border-white/10 text-secondary">
+                                <tr>
+                                    <th className="p-4">ID</th>
+                                    <th className="p-4">Name</th>
+                                    <th className="p-4">Email</th>
+                                    <th className="p-4">Max Hours/Week</th>
+                                    <th className="p-4 text-right">Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {teachers.length === 0 && (
+                                    <tr><td colSpan={5} className="p-4 text-center text-secondary">No teachers found.</td></tr>
+                                )}
+                                {teachers.map((teacher, i) => (
+                                    <motion.tr
+                                        initial={{ opacity: 0, x: -20 }}
+                                        animate={{ opacity: 1, x: 0 }}
+                                        transition={{ delay: i * 0.05 }}
+                                        key={teacher.id}
+                                        className="border-b border-white/5 hover:bg-white/5 transition-colors"
+                                    >
+                                        <td className="p-4 text-secondary">#{teacher.id}</td>
+                                        <td className="p-4 text-white">{teacher.name}</td>
+                                        <td className="p-4 text-secondary">{teacher.email}</td>
+                                        <td className="p-4 text-secondary">{teacher.max_hours_per_week}H</td>
+                                        <td className="p-4 text-right space-x-3">
+                                            <button onClick={() => handleEdit(teacher)} className="btn-outline px-3 py-1 rounded text-xs">Edit</button>
+                                            <button
+                                                onClick={() => handleDelete(teacher.id)}
+                                                className="btn-danger px-3 py-1 rounded text-xs"
+                                            >
+                                                Delete
+                                            </button>
+                                        </td>
+                                    </motion.tr>
+                                ))}
+                            </tbody>
+                        </table>
+                    </div>
                 )}
             </div>
         </motion.div>

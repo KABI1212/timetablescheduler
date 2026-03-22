@@ -1,11 +1,11 @@
-# ChronoClass AI – Smart Classroom & Autonomous Timetable Scheduler
+# RISING AI - Smart Classroom & Autonomous Timetable Scheduler
 
 ## System Architecture Explanation
-ChronoClass AI is built on a modern, highly scalable 3-Tier Architecture designed to process constraint satisfaction problems effectively:
+RISING AI is built on a modern, highly scalable 3-Tier Architecture designed to process constraint satisfaction problems effectively:
 
 1. **Frontend Layer (React + Vite + TailwindCSS)**
    - Acts as the presentation layer. It communicates with the backend via REST APIs.
-   - Features a custom Cyberpunk Neon CSS design system using glassmorphism effects and Framer Motion for structural animations.
+   - Features a custom Quantum Blue CSS design system using glassmorphism effects and Framer Motion for structural animations.
    
 2. **Backend API Layer (Node.js + Express.js)**
    - Handles the core business logic, routing, and Role-Based Access Control using JWT.
@@ -40,13 +40,13 @@ The PostgreSQL schema enforces strict referential integrity:
 - `/frontend/`: React Vite SPA.
   - `/src/components/`: Reusable UI elements (`Sidebar.jsx`, `Navbar.jsx`).
   - `/src/pages/`: Views (`Dashboard.jsx`, `AiTimetableGenerator.jsx`, etc.).
-  - `tailwind.config.js`: Neon UI theming.
+  - `tailwind.config.js`: Quantum Blue UI theming.
 
 ## Instructions to Run the Project Locally
 
 1. **Database Setup**
    - Ensure PostgreSQL is running.
-   - Create a database called `chronoclass`.
+   - Create a database called `risingai`.
    - Update `backend/.env` with your Postgres credentials.
 
 2. **Backend Setup**
@@ -59,4 +59,4 @@ The PostgreSQL schema enforces strict referential integrity:
    - Run `npm install` to install React, Tailwind, and Framer Motion dependencies.
    - Run `npm run dev` to start the Vite UI server.
    - Open your browser to the URL provided by Vite (usually `http://localhost:5173`).
-   - Enjoy the Cyberpunk neon control center!
+   - Enjoy the Quantum Blue control center!

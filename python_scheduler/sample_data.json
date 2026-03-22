@@ -1,0 +1,71 @@
+{
+  "subjects_by_section": {
+    "CSE-A": [
+      {
+        "subject_name": "Mathematics",
+        "theory_hours_per_week": 3,
+        "lab_hours_per_week": 0,
+        "teacher_assigned": "Dr.Ravi"
+      },
+      {
+        "subject_name": "Database Systems",
+        "theory_hours_per_week": 3,
+        "lab_hours_per_week": 2,
+        "teacher_assigned": "Dr.Kumar"
+      },
+      {
+        "subject_name": "Operating Systems",
+        "theory_hours_per_week": 3,
+        "lab_hours_per_week": 0,
+        "teacher_assigned": "Dr.Sai"
+      }
+    ],
+    "CSE-B": [
+      {
+        "subject_name": "Mathematics",
+        "theory_hours_per_week": 3,
+        "lab_hours_per_week": 0,
+        "teacher_assigned": "Dr.Ravi"
+      },
+      {
+        "subject_name": "Database Systems",
+        "theory_hours_per_week": 3,
+        "lab_hours_per_week": 2,
+        "teacher_assigned": "Dr.Kumar"
+      },
+      {
+        "subject_name": "Networks",
+        "theory_hours_per_week": 3,
+        "lab_hours_per_week": 0,
+        "teacher_assigned": "Dr.Neel"
+      }
+    ]
+  },
+  "teachers": [
+    {
+      "teacher_name": "Dr.Ravi",
+      "subjects_they_can_teach": ["Mathematics"]
+    },
+    {
+      "teacher_name": "Dr.Kumar",
+      "subjects_they_can_teach": ["Database Systems"]
+    },
+    {
+      "teacher_name": "Dr.Sai",
+      "subjects_they_can_teach": ["Operating Systems"]
+    },
+    {
+      "teacher_name": "Dr.Neel",
+      "subjects_they_can_teach": ["Networks"]
+    }
+  ],
+  "rooms": [
+    { "room_id": "Room101", "room_type": "classroom" },
+    { "room_id": "Room102", "room_type": "classroom" },
+    { "room_id": "Lab1", "room_type": "lab" },
+    { "room_id": "Lab2", "room_type": "lab" }
+  ],
+  "days_per_week": 5,
+  "periods_per_day": 8,
+  "optimize": true
+}
