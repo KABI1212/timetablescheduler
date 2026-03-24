@@ -1,20 +1,21 @@
-import React from 'react';
-import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
+import React, { Suspense, lazy, useEffect, useState } from 'react';
+import { BrowserRouter as Router, Routes, Route, Navigate, useLocation } from 'react-router-dom';
 import Sidebar from './components/Sidebar';
 import Navbar from './components/Navbar';
-import Dashboard from './pages/Dashboard';
-import AiTimetableGenerator from './pages/AiTimetableGenerator';
-import TeacherManagement from './pages/TeacherManagement';
-import ClassroomManagement from './pages/ClassroomManagement';
-import SubjectManagement from './pages/SubjectManagement';
-import TimetableView from './pages/TimetableView';
-import TeacherAvailability from './pages/TeacherAvailability';
-import AbsenceManager from './pages/AbsenceManager';
-import Analytics from './pages/Analytics';
-import StudentTimetable from './pages/StudentTimetable';
-import TimetableEditor from './pages/TimetableEditor';
-
-import Login from './pages/Login';
+import CommandPalette from './components/CommandPalette';
+import { defaultPathForRole, normalizeRole } from './config/navigation';
+const Dashboard = lazy(() => import('./pages/Dashboard'));
+const AiTimetableGenerator = lazy(() => import('./pages/AiTimetableGenerator'));
+const TeacherManagement = lazy(() => import('./pages/TeacherManagement'));
+const ClassroomManagement = lazy(() => import('./pages/ClassroomManagement'));
+const SubjectManagement = lazy(() => import('./pages/SubjectManagement'));
+const TimetableView = lazy(() => import('./pages/TimetableView'));
+const TeacherAvailability = lazy(() => import('./pages/TeacherAvailability'));
+const AbsenceManager = lazy(() => import('./pages/AbsenceManager'));
+const Analytics = lazy(() => import('./pages/Analytics'));
+const StudentTimetable = lazy(() => import('./pages/StudentTimetable'));
+const TimetableEditor = lazy(() => import('./pages/TimetableEditor'));
+const Login = lazy(() => import('./pages/Login'));
 
 const getStoredUser = () => {
     const raw = localStorage.getItem('chrono_user');
@@ -23,23 +24,6 @@ const getStoredUser = () => {
         return JSON.parse(raw);
     } catch {
         return null;
-    }
-};
-
-const normalizeRole = (role) => {
-    const normalized = String(role || '').trim().toLowerCase();
-    if (normalized === 'developer') return 'admin';
-    return normalized;
-};
-
-const defaultPathForRole = (role) => {
-    switch (normalizeRole(role)) {
-        case 'teacher':
-            return '/availability';
-        case 'student':
-            return '/student-timetable';
-        default:
-            return '/';
     }
 };
 
@@ -66,33 +50,84 @@ const RoleRoute = ({ children, roles = [] }) => {
     return children;
 };
 
+const RouteFallback = () => (
+    <div className="space-y-4">
+        <div className="h-16 skeleton" />
+        <div className="h-40 skeleton" />
+        <div className="h-64 skeleton" />
+    </div>
+);
+
 /**
  * @param {Object} props
  * @param {React.ReactNode} props.children
  */
-const Layout = ({ children }) => (
-    <div className="flex h-screen bg-shell text-white overflow-hidden relative">
-        <div className="absolute inset-0 pointer-events-none z-0">
-            <div className="absolute -top-24 -left-24 w-72 h-72 rounded-full bg-primary/20 blur-3xl" />
-            <div className="absolute top-20 right-0 w-80 h-80 rounded-full bg-danger/15 blur-3xl" />
-            <div className="absolute bottom-0 left-1/3 w-72 h-72 rounded-full bg-success/10 blur-3xl" />
-            <div className="absolute top-1/3 left-1/2 -translate-x-1/2 w-96 h-56 rounded-full bg-primaryGlow/10 blur-3xl" />
+const Layout = ({ children }) => {
+    const location = useLocation();
+    const user = getStoredUser();
+    const role = normalizeRole(user?.role || 'student');
+    const [sidebarOpen, setSidebarOpen] = useState(false);
+    const [commandPaletteOpen, setCommandPaletteOpen] = useState(false);
+
+    useEffect(() => {
+        setSidebarOpen(false);
+    }, [location.pathname]);
+
+    useEffect(() => {
+        const handleKeyDown = (event) => {
+            if ((event.ctrlKey || event.metaKey) && event.key.toLowerCase() === 'k') {
+                event.preventDefault();
+                setCommandPaletteOpen((prev) => !prev);
+            }
+        };
+
+        window.addEventListener('keydown', handleKeyDown);
+        return () => window.removeEventListener('keydown', handleKeyDown);
+    }, []);
+
+    return (
+        <div className="relative min-h-screen bg-shell text-white">
+            <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_top_left,rgba(98,230,215,0.12),transparent_24%),radial-gradient(circle_at_top_right,rgba(255,180,77,0.18),transparent_26%)]" />
+            <div className="relative lg:grid lg:grid-cols-[18rem_minmax(0,1fr)] lg:gap-5 lg:px-4 lg:pb-4">
+                <Sidebar
+                    open={sidebarOpen}
+                    onClose={() => setSidebarOpen(false)}
+                    className="lg:sticky lg:top-4 lg:h-[calc(100vh-2rem)]"
+                />
+                <div className="min-w-0">
+                    <Navbar
+                        className="lg:mt-4"
+                        onOpenSidebar={() => setSidebarOpen(true)}
+                        onOpenCommandPalette={() => setCommandPaletteOpen(true)}
+                    />
+                    <main className="px-4 pb-6 pt-4 md:px-6 lg:px-2">
+                        <Suspense fallback={<RouteFallback />}>
+                            {children}
+                        </Suspense>
+                    </main>
+                </div>
+            </div>
+            <CommandPalette
+                open={commandPaletteOpen}
+                onClose={() => setCommandPaletteOpen(false)}
+                role={role}
+            />
         </div>
-        <Sidebar className="z-20" />
-        <div className="flex-1 flex flex-col relative z-10 h-screen overflow-hidden">
-            <Navbar />
-            <main className="flex-1 p-6 overflow-y-auto">
-                {children}
-            </main>
-        </div>
-    </div>
-);
+    );
+};
 
 function App() {
     return (
         <Router>
             <Routes>
-                <Route path="/login" element={<Login />} />
+                <Route
+                    path="/login"
+                    element={(
+                        <Suspense fallback={<div className="min-h-screen bg-shell p-6"><RouteFallback /></div>}>
+                            <Login />
+                        </Suspense>
+                    )}
+                />
                 <Route path="/*" element={
                     <PrivateRoute>
                         <Layout>

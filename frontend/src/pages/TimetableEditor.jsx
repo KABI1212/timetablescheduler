@@ -1,6 +1,5 @@
 // @ts-nocheck
 import React, { useEffect, useMemo, useState } from 'react';
-import { motion } from 'framer-motion';
 import { DndContext, useDraggable, useDroppable, closestCenter } from '@dnd-kit/core';
 import { apiFetch } from '../utils/api';
 import { useToast } from '../components/ToastProvider';
@@ -243,11 +242,7 @@ const TimetableEditor = () => {
     }
 
     return (
-        <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            className="space-y-6"
-        >
+        <div className="space-y-6">
             <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
                 <div>
                     <h1 className="text-3xl font-bold text-white">Timetable Editor</h1>
@@ -388,7 +383,7 @@ const TimetableEditor = () => {
                     </div>
                 </div>
             </DndContext>
-        </motion.div>
+        </div>
     );
 };
 

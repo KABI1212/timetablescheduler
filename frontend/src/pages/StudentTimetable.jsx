@@ -1,8 +1,6 @@
 import React, { useEffect, useMemo, useRef, useState } from 'react';
-import { motion } from 'framer-motion';
-import html2canvas from 'html2canvas';
-import jsPDF from 'jspdf';
 import { apiFetch } from '../utils/api';
+import { buildICalendar, downloadCalendarFile } from '../utils/calendar';
 import { useToast } from '../components/ToastProvider';
 
 const days = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
@@ -131,6 +129,10 @@ const StudentTimetable = () => {
     const handleExportPDF = async () => {
         if (!tableRef.current) return;
         try {
+            const [{ default: html2canvas }, { default: jsPDF }] = await Promise.all([
+                import('html2canvas'),
+                import('jspdf')
+            ]);
             const exportNode = buildExportNode(tableRef.current);
             exportNode.style.position = 'fixed';
             exportNode.style.left = '-10000px';
@@ -144,18 +146,31 @@ const StudentTimetable = () => {
             const pageHeight = pdf.internal.pageSize.getHeight();
 
             pdf.setFontSize(16);
-            pdf.text('LUMOGEN - My Timetable', 40, 40);
+            pdf.text('ChronoCampus - My Timetable', 40, 40);
             pdf.setFontSize(10);
             pdf.text(new Date().toLocaleDateString(), pageWidth - 120, 40);
 
             const imgWidth = pageWidth - 80;
             const imgHeight = (canvas.height * imgWidth) / canvas.width;
             pdf.addImage(imgData, 'PNG', 40, 60, imgWidth, Math.min(imgHeight, pageHeight - 120));
-            pdf.save('LUMOGEN_My_Timetable.pdf');
+            pdf.save('ChronoCampus_My_Timetable.pdf');
             toast.success('PDF exported');
         } catch (err) {
             const error = /** @type {Error} */ (err);
             toast.error(error.message || 'PDF export failed');
+        }
+    };
+
+    const handleExportICal = () => {
+        try {
+            const content = buildICalendar(schedule, {
+                calendarName: `${user?.name || 'Student'} Timetable`
+            });
+            downloadCalendarFile('ChronoCampus_My_Timetable.ics', content);
+            toast.success('iCal exported');
+        } catch (err) {
+            const error = /** @type {Error} */ (err);
+            toast.error(error.message || 'iCal export failed');
         }
     };
 
@@ -232,19 +247,20 @@ const StudentTimetable = () => {
     };
 
     return (
-        <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            className="space-y-6"
-        >
+        <div className="space-y-6">
             <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
                 <div>
                     <h1 className="text-3xl font-bold text-white">My Timetable</h1>
                     <p className="text-secondary text-sm">Class schedule overview</p>
                 </div>
-                <button onClick={handleExportPDF} className="btn-primary px-4 py-2 rounded-lg text-sm">
-                    Export My Timetable PDF
-                </button>
+                <div className="flex flex-wrap gap-3">
+                    <button onClick={handleExportPDF} className="btn-primary px-4 py-2 rounded-lg text-sm">
+                        Export PDF
+                    </button>
+                    <button onClick={handleExportICal} className="btn-outline px-4 py-2 rounded-lg text-sm">
+                        Export iCal
+                    </button>
+                </div>
             </div>
 
             {loading ? (
@@ -284,7 +300,7 @@ const StudentTimetable = () => {
                     </div>
                 </div>
             )}
-        </motion.div>
+        </div>
     );
 };
 

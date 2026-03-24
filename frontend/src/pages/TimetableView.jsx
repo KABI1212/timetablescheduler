@@ -1,9 +1,6 @@
 import React, { useEffect, useMemo, useRef, useState } from 'react';
-import { motion } from 'framer-motion';
-import html2canvas from 'html2canvas';
-import jsPDF from 'jspdf';
-import * as XLSX from 'xlsx';
 import { apiFetch } from '../utils/api';
+import { buildICalendar, downloadCalendarFile } from '../utils/calendar';
 import { useToast } from '../components/ToastProvider';
 
 const days = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
@@ -128,6 +125,10 @@ const TimetableView = () => {
     const handleExportPDF = async () => {
         if (!tableRef.current) return;
         try {
+            const [{ default: html2canvas }, { default: jsPDF }] = await Promise.all([
+                import('html2canvas'),
+                import('jspdf')
+            ]);
             const element = tableRef.current;
             const exportNode = buildExportNode(element);
             exportNode.style.position = 'fixed';
@@ -142,7 +143,7 @@ const TimetableView = () => {
             const pageHeight = pdf.internal.pageSize.getHeight();
 
             pdf.setFontSize(16);
-            pdf.text(viewMode === 'draft' ? 'LUMOGEN - Draft Timetable' : 'LUMOGEN - Published Timetable', 40, 40);
+            pdf.text(viewMode === 'draft' ? 'ChronoCampus - Draft Timetable' : 'ChronoCampus - Published Timetable', 40, 40);
             pdf.setFontSize(10);
             pdf.text(new Date().toLocaleDateString(), pageWidth - 120, 40);
 
@@ -151,8 +152,8 @@ const TimetableView = () => {
             pdf.addImage(imgData, 'PNG', 40, 60, imgWidth, Math.min(imgHeight, pageHeight - 120));
 
             pdf.setFontSize(9);
-            pdf.text('LUMOGEN Scheduler | Page 1', 40, pageHeight - 30);
-            pdf.save(`LUMOGEN_${viewMode === 'draft' ? 'Draft' : 'Published'}_Timetable_${selectedRoom || 'Class'}.pdf`);
+            pdf.text('ChronoCampus Scheduler | Page 1', 40, pageHeight - 30);
+            pdf.save(`ChronoCampus_${viewMode === 'draft' ? 'Draft' : 'Published'}_Timetable_${selectedRoom || 'Class'}.pdf`);
             toast.success('PDF exported');
         } catch (err) {
             const error = /** @type {Error} */ (err);
@@ -160,8 +161,9 @@ const TimetableView = () => {
         }
     };
 
-    const handleExportExcel = () => {
+    const handleExportExcel = async () => {
         try {
+            const XLSX = await import('xlsx');
             const workbook = XLSX.utils.book_new();
             const header = ['DAY', ...timeSlots.map((slot) => `${slot.label} ${slot.time}`)];
             const rows = days.map((day) => {
@@ -190,11 +192,28 @@ const TimetableView = () => {
             const colWidths = [{ wch: 14 }, ...timeSlots.map(() => ({ wch: 22 }))];
             sheet['!cols'] = colWidths;
             XLSX.utils.book_append_sheet(workbook, sheet, 'Timetable');
-            XLSX.writeFile(workbook, `LUMOGEN_${viewMode === 'draft' ? 'Draft' : 'Published'}_Timetable_${selectedRoom || 'Class'}.xlsx`);
+            XLSX.writeFile(workbook, `ChronoCampus_${viewMode === 'draft' ? 'Draft' : 'Published'}_Timetable_${selectedRoom || 'Class'}.xlsx`);
             toast.success('Excel exported');
         } catch (err) {
             const error = /** @type {Error} */ (err);
             toast.error(error.message || 'Excel export failed');
+        }
+    };
+
+    const handleExportICal = () => {
+        try {
+            const entries = schedule.filter((entry) => entry.classroom_name === selectedRoom);
+            const content = buildICalendar(entries, {
+                calendarName: `${selectedRoom || 'Class'} ${viewMode === 'draft' ? 'Draft' : 'Published'} Timetable`
+            });
+            downloadCalendarFile(
+                `ChronoCampus_${viewMode === 'draft' ? 'Draft' : 'Published'}_Timetable_${selectedRoom || 'Class'}.ics`,
+                content
+            );
+            toast.success('iCal exported');
+        } catch (err) {
+            const error = /** @type {Error} */ (err);
+            toast.error(error.message || 'iCal export failed');
         }
     };
 
@@ -265,11 +284,7 @@ const TimetableView = () => {
     };
 
     return (
-        <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            className="space-y-6"
-        >
+        <div className="space-y-6">
             <div>
                 <h1 className="text-3xl font-bold text-white">Timetable View</h1>
                 <p className="text-secondary text-sm">
@@ -300,6 +315,7 @@ const TimetableView = () => {
                 <div className="flex items-center gap-3">
                     <button onClick={handleExportPDF} className="btn-primary px-4 py-2 rounded-lg text-sm">Export PDF</button>
                     <button onClick={handleExportExcel} className="btn-outline px-4 py-2 rounded-lg text-sm">Export Excel</button>
+                    <button onClick={handleExportICal} className="btn-outline px-4 py-2 rounded-lg text-sm">Export iCal</button>
                 </div>
             </div>
 
@@ -341,7 +357,7 @@ const TimetableView = () => {
                     </div>
                 </div>
             )}
-        </motion.div>
+        </div>
     );
 };
 

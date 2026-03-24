@@ -1,7 +1,6 @@
 // @ts-nocheck
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { motion } from 'framer-motion';
 import { login } from '../utils/api';
 import { useToast } from '../components/ToastProvider';
 import BrandMark from '../components/BrandMark';
@@ -16,22 +15,22 @@ const Login = () => {
     const toast = useToast();
 
     /**
-     * @param {React.FormEvent} e
+     * @param {React.FormEvent} event
      */
-    const handleLogin = async (e) => {
-        e.preventDefault();
+    const handleLogin = async (event) => {
+        event.preventDefault();
         setAuthError('');
+
         /** @type {Record<string, string>} */
         const nextErrors = {};
         if (!email.trim()) nextErrors.email = 'Email is required.';
-        if (!password.trim()) {
-            // Password is optional for student auto-login.
-        }
+
         setErrors(nextErrors);
         if (Object.keys(nextErrors).length > 0) return;
+
         try {
             const data = await login(email, password, role);
-            toast.success('Welcome to LUMOGEN');
+            toast.success('Welcome to ChronoCampus');
             const nextRole = data?.user?.role || 'student';
             if (nextRole === 'student') {
                 navigate('/student-timetable');
@@ -48,63 +47,103 @@ const Login = () => {
     };
 
     return (
-        <div className="flex items-center justify-center min-h-screen w-full bg-shell relative z-50 px-4">
-            <motion.div
-                initial={{ opacity: 0, scale: 0.95 }}
-                animate={{ opacity: 1, scale: 1 }}
-                className="card-glass p-10 rounded-2xl max-w-md w-full relative overflow-hidden"
-            >
-                <div className="absolute inset-x-8 top-0 h-px bg-gradient-to-r from-transparent via-primaryGlow to-transparent opacity-70" />
-                <div className="text-center mb-8">
-                    <BrandMark centered subtitle="Smart Timetable Scheduler" className="justify-center mb-3" />
-                    <p className="text-secondary tracking-[0.32em] text-sm uppercase">Secure Access Portal</p>
-                </div>
+        <div className="relative min-h-screen overflow-hidden bg-shell px-4 py-8 text-white md:px-8">
+            <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_20%_20%,rgba(98,230,215,0.16),transparent_24%),radial-gradient(circle_at_80%_12%,rgba(255,180,77,0.18),transparent_28%)]" />
+            <div className="relative mx-auto grid min-h-[calc(100vh-4rem)] max-w-6xl items-stretch gap-6 lg:grid-cols-[1.1fr_minmax(22rem,0.9fr)]">
+                <section className="card-glass flex flex-col justify-between rounded-[2.25rem] p-6 md:p-8">
+                    <div>
+                        <BrandMark centered={false} subtitle="Campus Timetable Operating System" className="mb-8" />
+                        <div className="inline-flex rounded-full border border-primary/20 bg-primary/10 px-3 py-2 text-[11px] uppercase tracking-[0.34em] text-primary">
+                            Scheduling Intelligence
+                        </div>
+                        <h1 className="mt-6 max-w-2xl text-4xl font-black leading-tight md:text-5xl">
+                            Build cleaner academic schedules with less manual chasing.
+                        </h1>
+                        <p className="mt-5 max-w-xl text-sm leading-7 text-secondary md:text-base">
+                            ChronoCampus combines timetable generation, lab planning, teacher availability, absence handling,
+                            and review workflows in one control surface.
+                        </p>
+                    </div>
 
-                {authError && <div className="bg-danger/20 border border-danger text-danger p-3 rounded mb-4 text-sm">{authError}</div>}
+                    <div className="mt-8 grid gap-4 sm:grid-cols-3">
+                        {[
+                            { label: 'Timetable AI', detail: 'Generate and compare options quickly.' },
+                            { label: 'Lab-Aware', detail: 'Handle double periods and room constraints.' },
+                            { label: 'Live Ops', detail: 'Manage absences, edits, and publishing.' }
+                        ].map((item) => (
+                            <div key={item.label} className="rounded-[1.5rem] border border-white/10 bg-white/[0.05] p-4">
+                                <div className="text-[11px] uppercase tracking-[0.3em] text-primary">{item.label}</div>
+                                <p className="mt-2 text-sm leading-relaxed text-secondary">{item.detail}</p>
+                            </div>
+                        ))}
+                    </div>
+                </section>
 
-                <form onSubmit={handleLogin} className="space-y-6">
-                    <div>
-                        <label className="block text-secondary text-sm mb-2">Email</label>
-                        <input
-                            type="email"
-                            className="w-full input-quantum p-3 rounded-lg"
-                            value={email}
-                            onChange={e => setEmail(e.target.value)}
-                        />
-                        {errors.email && <p className="text-danger text-xs mt-1">{errors.email}</p>}
+                <section className="card-glass rounded-[2.25rem] p-6 md:p-8">
+                    <div className="mb-8">
+                        <div className="text-[11px] uppercase tracking-[0.34em] text-primary">Secure Access</div>
+                        <h2 className="mt-3 text-3xl font-black text-white">Enter workspace</h2>
+                        <p className="mt-2 text-sm text-secondary">
+                            Sign in as admin, teacher, or student to open the right control surface.
+                        </p>
                     </div>
-                    <div>
-                        <label className="block text-secondary text-sm mb-2">Password (optional)</label>
-                        <input
-                            type="password"
-                            className="w-full input-quantum p-3 rounded-lg"
-                            value={password}
-                            onChange={e => setPassword(e.target.value)}
-                        />
-                        {errors.password && <p className="text-danger text-xs mt-1">{errors.password}</p>}
+
+                    {authError && (
+                        <div className="mb-4 rounded-2xl border border-danger/40 bg-danger/10 p-4 text-sm text-danger">
+                            {authError}
+                        </div>
+                    )}
+
+                    <form onSubmit={handleLogin} className="space-y-5">
+                        <div>
+                            <label className="mb-2 block text-sm text-secondary">Email</label>
+                            <input
+                                type="email"
+                                className="input-quantum w-full rounded-2xl p-4"
+                                placeholder="name@campus.edu"
+                                value={email}
+                                onChange={(event) => setEmail(event.target.value)}
+                            />
+                            {errors.email && <p className="mt-1 text-xs text-danger">{errors.email}</p>}
+                        </div>
+
+                        <div>
+                            <label className="mb-2 block text-sm text-secondary">Password (optional)</label>
+                            <input
+                                type="password"
+                                className="input-quantum w-full rounded-2xl p-4"
+                                placeholder="Enter password if required"
+                                value={password}
+                                onChange={(event) => setPassword(event.target.value)}
+                            />
+                        </div>
+
+                        <div>
+                            <label className="mb-2 block text-sm text-secondary">Login As</label>
+                            <select
+                                className="input-quantum w-full rounded-2xl p-4"
+                                value={role}
+                                onChange={(event) => setRole(event.target.value)}
+                            >
+                                <option value="admin">Admin</option>
+                                <option value="teacher">Teacher</option>
+                                <option value="student">Student</option>
+                            </select>
+                        </div>
+
+                        <button type="submit" className="btn-primary w-full rounded-2xl py-4 font-semibold uppercase tracking-[0.28em]">
+                            Enter Workspace
+                        </button>
+                    </form>
+
+                    <div className="mt-6 rounded-[1.5rem] border border-white/10 bg-white/[0.05] p-4">
+                        <div className="text-[11px] uppercase tracking-[0.3em] text-secondary">Tip</div>
+                        <p className="mt-2 text-sm leading-relaxed text-secondary">
+                            After sign-in, the new command palette lets you jump between timetable, analytics, labs, and availability with <span className="text-white">Ctrl/Cmd + K</span>.
+                        </p>
                     </div>
-                    <div>
-                        <label className="block text-secondary text-sm mb-2">Login As</label>
-                        <select
-                            className="w-full input-quantum p-3 rounded-lg"
-                            value={role}
-                            onChange={(e) => setRole(e.target.value)}
-                        >
-                            <option value="admin">Admin</option>
-                            <option value="teacher">Teacher</option>
-                            <option value="student">Student</option>
-                        </select>
-                    </div>
-                    <motion.button
-                        whileHover={{ scale: 1.03 }}
-                        whileTap={{ scale: 0.97 }}
-                        type="submit"
-                        className="w-full py-3 btn-primary rounded-lg font-bold tracking-widest uppercase"
-                    >
-                        Enter Workspace
-                    </motion.button>
-                </form>
-            </motion.div>
+                </section>
+            </div>
         </div>
     );
 };

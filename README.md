@@ -1,7 +1,7 @@
-# RISING AI - Smart Classroom & Autonomous Timetable Scheduler
+# ChronoCampus - Smart Classroom & Autonomous Timetable Scheduler
 
 ## System Architecture Explanation
-RISING AI is built on a modern, highly scalable 3-Tier Architecture designed to process constraint satisfaction problems effectively:
+ChronoCampus is built on a modern, highly scalable 3-Tier Architecture designed to process constraint satisfaction problems effectively:
 
 1. **Frontend Layer (React + Vite + TailwindCSS)**
    - Acts as the presentation layer. It communicates with the backend via REST APIs.

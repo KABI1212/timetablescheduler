@@ -7,29 +7,29 @@ export default {
     theme: {
         extend: {
             colors: {
-                primary: '#F4C430',
-                primaryGlow: '#38D9FF',
-                accent: '#FFF6D8',
-                bgDark: '#050505',
-                bgCard: '#111111',
-                borderGlow: '#F4C43055',
+                primary: '#FFB454',
+                primaryGlow: '#62E6D7',
+                accent: '#FFF4D8',
+                bgDark: '#09111F',
+                bgCard: '#111B2E',
+                borderGlow: '#FFD08A55',
                 textPrimary: '#FFFFFF',
-                textSecondary: '#F1E3A4',
-                success: '#2AD66B',
-                warning: '#F4C430',
-                danger: '#FF4D4D',
-                labTeal: '#38D9FF'
+                textSecondary: '#C7D2E3',
+                success: '#4ADE80',
+                warning: '#FBBF24',
+                danger: '#FB7185',
+                labTeal: '#67E8F9'
             },
             boxShadow: {
-                'blue-glow': '0 0 30px rgba(244, 196, 48, 0.18)',
-                'blue-glow-strong': '0 0 18px rgba(244, 196, 48, 0.55)',
-                'success-glow': '0 0 18px rgba(42, 214, 107, 0.35)',
-                'warning-glow': '0 0 18px rgba(244, 196, 48, 0.35)',
-                'danger-glow': '0 0 18px rgba(255, 77, 77, 0.35)'
+                'blue-glow': '0 0 30px rgba(255, 180, 77, 0.18)',
+                'blue-glow-strong': '0 0 18px rgba(255, 180, 77, 0.42)',
+                'success-glow': '0 0 18px rgba(74, 222, 128, 0.35)',
+                'warning-glow': '0 0 18px rgba(251, 191, 36, 0.35)',
+                'danger-glow': '0 0 18px rgba(251, 113, 133, 0.35)'
             },
             fontFamily: {
-                body: ['Manrope', 'system-ui', 'sans-serif'],
-                heading: ['Orbitron', 'Manrope', 'sans-serif']
+                body: ['Space Grotesk', 'system-ui', 'sans-serif'],
+                heading: ['Sora', 'Space Grotesk', 'sans-serif']
             }
         },
     },

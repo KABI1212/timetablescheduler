@@ -1,72 +1,100 @@
 import React from 'react';
 import { Link, useLocation } from 'react-router-dom';
-import { motion } from 'framer-motion';
 import BrandMark from './BrandMark';
-
-const menuItems = [
-    { path: '/', label: 'Dashboard', icon: 'DB', roles: ['admin'] },
-    { path: '/timetable-ai', label: 'AI Generator', icon: 'AI', roles: ['admin'] },
-    { path: '/timetable-view', label: 'Timetable View', icon: 'TV', roles: ['admin', 'teacher'] },
-    { path: '/timetable-editor', label: 'Timetable Editor', icon: 'ED', roles: ['admin'] },
-    { path: '/teachers', label: 'Teachers', icon: 'TC', roles: ['admin'] },
-    { path: '/classrooms', label: 'Classrooms', icon: 'CR', roles: ['admin'] },
-    { path: '/subjects', label: 'Subjects', icon: 'SB', roles: ['admin'] },
-    { path: '/availability', label: 'Availability', icon: 'AV', roles: ['admin', 'teacher'] },
-    { path: '/absences', label: 'Absence Manager', icon: 'AB', roles: ['admin'] },
-    { path: '/analytics', label: 'Analytics', icon: 'AN', roles: ['admin'] },
-    { path: '/student-timetable', label: 'My Timetable', icon: 'ST', roles: ['student'] },
-];
-
-const normalizeRole = (role) => {
-    const normalized = String(role || '').trim().toLowerCase();
-    if (normalized === 'developer') return 'admin';
-    return normalized;
-};
+import { getMenuItemsForRole, normalizeRole } from '../config/navigation';
 
 /**
  * @param {Object} props
  * @param {string} [props.className]
+ * @param {boolean} [props.open]
+ * @param {() => void} [props.onClose]
  */
-const Sidebar = ({ className = "" }) => {
+const Sidebar = ({ className = "", open = false, onClose = () => { } }) => {
     const location = useLocation();
     const userRaw = localStorage.getItem('chrono_user');
-    const user = userRaw ? JSON.parse(userRaw) : null;
+    let user = null;
+    if (userRaw) {
+        try {
+            user = JSON.parse(userRaw);
+        } catch {
+            user = null;
+        }
+    }
     const role = normalizeRole(user?.role || 'student');
+    const items = getMenuItemsForRole(role);
 
     return (
-        <motion.aside
-            initial={{ x: -250 }}
-            animate={{ x: 0 }}
-            className={`w-64 bg-bgDark border-r border-borderGlow/40 flex flex-col z-20 ${className}`}
-        >
-            <div className="p-6 border-b border-borderGlow/30">
-                <BrandMark compact subtitle="Campus Scheduler" />
-            </div>
-            <nav className="flex-1 p-4 space-y-2">
-                {menuItems
-                    .filter((item) => item.roles.map(normalizeRole).includes(role))
-                    .map(item => {
-                    const isActive = location.pathname === item.path;
-                    return (
-                        <Link key={item.path} to={item.path}>
-                            <motion.div
-                                whileHover={{ scale: 1.05, x: 5 }}
-                                whileTap={{ scale: 0.95 }}
-                                className={`p-3 rounded-lg flex items-center space-x-3 cursor-pointer transition-colors ${isActive
-                                    ? 'bg-primary/15 border border-primary text-primary shadow-blue-glow'
-                                    : 'hover:bg-white/5 text-secondary'
-                                    }`}
-                            >
-                                <span className="text-xs font-bold w-8 h-8 rounded-lg bg-white/5 flex items-center justify-center border border-white/5">
-                                    {item.icon}
-                                </span>
-                                <span className="font-medium">{item.label}</span>
-                            </motion.div>
-                        </Link>
-                    );
-                    })}
-            </nav>
-        </motion.aside>
+        <>
+            {open && (
+                <button
+                    aria-label="Close navigation"
+                    className="fixed inset-0 z-40 bg-slate-950/70 backdrop-blur-sm lg:hidden"
+                    onClick={onClose}
+                />
+            )}
+            <aside
+                className={`fixed inset-y-0 left-0 z-50 w-[18rem] max-w-[85vw] -translate-x-full transition-transform duration-300 lg:static lg:z-20 lg:w-auto lg:max-w-none lg:translate-x-0 ${open ? 'translate-x-0' : ''} ${className}`}
+            >
+                <div className="flex h-full flex-col overflow-hidden border-r border-white/10 bg-bgDark/90 px-4 py-4 shadow-[0_30px_90px_rgba(2,8,23,0.45)] backdrop-blur-xl lg:rounded-[2rem] lg:border lg:border-white/10">
+                    <div className="flex items-center justify-between rounded-[1.6rem] border border-white/10 bg-white/5 px-4 py-4">
+                        <BrandMark compact subtitle="Campus Scheduler" />
+                        <button
+                            onClick={onClose}
+                            className="inline-flex h-10 w-10 items-center justify-center rounded-2xl border border-white/10 bg-slate-950/50 text-[10px] font-semibold uppercase tracking-[0.3em] text-secondary lg:hidden"
+                        >
+                            X
+                        </button>
+                    </div>
+
+                    <div className="mt-4 rounded-[1.6rem] border border-primary/15 bg-gradient-to-br from-primary/12 via-transparent to-primaryGlow/8 px-4 py-4">
+                        <div className="text-[11px] uppercase tracking-[0.34em] text-primary">Control Deck</div>
+                        <p className="mt-2 text-sm font-semibold text-white">
+                            {role === 'student' ? 'Stay on top of your weekly classes.' : 'Run scheduling ops with faster navigation.'}
+                        </p>
+                        <p className="mt-2 text-sm leading-relaxed text-secondary">
+                            Use the refreshed shell or press <span className="text-white">Ctrl/Cmd + K</span> to jump anywhere instantly.
+                        </p>
+                    </div>
+
+                    <nav className="mt-5 flex-1 space-y-2 overflow-y-auto pr-1">
+                        {items.map((item) => {
+                            const isActive = location.pathname === item.path;
+                            return (
+                                <Link key={item.path} to={item.path} onClick={onClose}>
+                                    <div
+                                        className={`group rounded-[1.35rem] border px-4 py-3 transition duration-200 ${isActive
+                                            ? 'border-primary/35 bg-primary/12 text-white shadow-[0_18px_48px_rgba(255,180,77,0.16)]'
+                                            : 'border-transparent bg-white/[0.04] text-secondary hover:border-white/10 hover:bg-white/[0.08] hover:text-white'
+                                            }`}
+                                    >
+                                        <div className="flex items-center gap-3">
+                                            <span className={`inline-flex h-11 w-11 items-center justify-center rounded-2xl border text-xs font-semibold uppercase tracking-[0.28em] ${isActive
+                                                ? 'border-primary/30 bg-slate-950/70 text-primary'
+                                                : 'border-white/10 bg-slate-950/50 text-secondary group-hover:text-primary'
+                                                }`}>
+                                                {item.icon}
+                                            </span>
+                                            <div className="min-w-0 flex-1">
+                                                <div className="text-sm font-semibold">{item.label}</div>
+                                                <div className="mt-1 text-xs leading-relaxed text-secondary/80">
+                                                    {item.description}
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </Link>
+                            );
+                        })}
+                    </nav>
+
+                    <div className="mt-4 rounded-[1.5rem] border border-white/10 bg-white/[0.04] px-4 py-4">
+                        <div className="text-[11px] uppercase tracking-[0.32em] text-secondary">Session</div>
+                        <div className="mt-2 text-sm font-semibold text-white">{user?.name || 'Workspace user'}</div>
+                        <div className="mt-1 text-xs uppercase tracking-[0.26em] text-primary">{role}</div>
+                    </div>
+                </div>
+            </aside>
+        </>
     );
 };
 

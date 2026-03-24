@@ -1,5 +1,4 @@
 import React, { useEffect, useState } from 'react';
-import { motion } from 'framer-motion';
 import {
     BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer,
     PieChart, Pie, Cell, ScatterChart, Scatter, CartesianGrid, ZAxis
@@ -62,11 +61,7 @@ const Analytics = () => {
     }
 
     return (
-        <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            className="space-y-6"
-        >
+        <div className="space-y-6">
             <div>
                 <h1 className="text-3xl font-bold text-white">Analytics Dashboard</h1>
                 <p className="text-secondary text-sm">Live scheduling insights</p>
@@ -168,7 +163,7 @@ const Analytics = () => {
                     </ResponsiveContainer>
                 </div>
             </div>
-        </motion.div>
+        </div>
     );
 };
 

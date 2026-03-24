@@ -1,6 +1,5 @@
 // @ts-nocheck
 import React, { useEffect, useMemo, useState } from 'react';
-import { motion } from 'framer-motion';
 import { apiFetch } from '../utils/api';
 import { useToast } from '../components/ToastProvider';
 
@@ -97,11 +96,7 @@ const AbsenceManager = () => {
     };
 
     return (
-        <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            className="space-y-6"
-        >
+        <div className="space-y-6">
             <div>
                 <h1 className="text-3xl font-bold text-white">Absence Manager</h1>
                 <p className="text-secondary text-sm">Assign substitutes and update the live timetable</p>
@@ -203,7 +198,7 @@ const AbsenceManager = () => {
                     ))}
                 </div>
             </div>
-        </motion.div>
+        </div>
     );
 };
 

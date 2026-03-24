@@ -1,5 +1,4 @@
 import React, { useEffect, useMemo, useState } from 'react';
-import { motion } from 'framer-motion';
 import { apiFetch } from '../utils/api';
 import { useToast } from '../components/ToastProvider';
 
@@ -14,6 +13,12 @@ const slots = [
     { label: 'P7', time: '15:05', start: '15:05:00' },
     { label: 'P8', time: '15:55', start: '15:55:00' }
 ];
+const availabilityOrder = [null, 'preferred', 'blocked'];
+const availabilityLabels = {
+    preferred: 'Preferred',
+    blocked: 'Blocked',
+    neutral: 'Neutral'
+};
 
 const normalizeRole = (role) => {
     const normalized = String(role || '').trim().toLowerCase();
@@ -85,13 +90,15 @@ const TeacherAvailability = () => {
     const handleToggle = async (day, slot) => {
         const key = `${day}-${slot.start}`;
         const existing = availabilityMap.get(key);
-        const nextAvailable = existing ? !existing.is_available : false;
+        const currentStatus = existing?.status || null;
+        const currentIndex = availabilityOrder.indexOf(currentStatus);
+        const nextStatus = availabilityOrder[(currentIndex + 1) % availabilityOrder.length];
         try {
             await apiFetch('/availability', {
                 method: 'POST',
-                body: JSON.stringify({ day_of_week: day, timeslot: slot.start, is_available: nextAvailable })
+                body: JSON.stringify({ day_of_week: day, timeslot: slot.start, status: nextStatus })
             });
-            toast.success('Availability updated');
+            toast.success(nextStatus ? `Marked as ${nextStatus}` : 'Availability preference cleared');
             loadAvailability();
         } catch (err) {
             const error = /** @type {Error} */ (err);
@@ -143,14 +150,14 @@ const TeacherAvailability = () => {
     };
 
     return (
-        <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            className="space-y-6"
-        >
+        <div className="space-y-6">
             <div>
                 <h1 className="text-3xl font-bold text-white">Teacher Availability</h1>
-                <p className="text-secondary text-sm">Mark weekly availability and request leave</p>
+                <p className="text-secondary text-sm">
+                    {role === 'admin'
+                        ? 'Review preferred and blocked slots across faculty before generation'
+                        : 'Cycle each slot through neutral, preferred, and blocked'}
+                </p>
             </div>
 
             <div className="card-glass rounded-2xl overflow-hidden">
@@ -182,23 +189,26 @@ const TeacherAvailability = () => {
                                                 return (
                                                     <td key={key} className="p-3 text-center">
                                                         <div className="rounded-lg border border-white/10 bg-white/5 p-2 text-xs text-secondary">
-                                                            {entry ? `${entry.unavailable} unavailable` : '0 unavailable'}
+                                                            <div>{entry?.blocked || 0} blocked</div>
+                                                            <div className="mt-1 text-success">{entry?.preferred || 0} preferred</div>
                                                         </div>
                                                     </td>
                                                 );
                                             }
                                             const entry = availabilityMap.get(key);
-                                            const unavailable = entry && !entry.is_available;
-                                                    return (
+                                            const status = entry?.status || null;
+                                            const styleClass = status === 'blocked'
+                                                ? 'btn-state-blocked'
+                                                : status === 'preferred'
+                                                    ? 'btn-state-preferred'
+                                                    : 'btn-state-neutral';
+                                            return (
                                                 <td key={key} className="p-3 text-center">
                                                     <button
                                                         onClick={() => handleToggle(day, slot)}
-                                                        className={`w-full rounded-lg p-2 text-xs font-semibold btn-state ${unavailable
-                                                            ? 'btn-state-unavailable'
-                                                            : 'btn-state-available'
-                                                            }`}
+                                                        className={`w-full rounded-lg p-2 text-xs font-semibold btn-state ${styleClass}`}
                                                     >
-                                                        {unavailable ? 'Unavailable' : 'Available'}
+                                                        {availabilityLabels[status || 'neutral']}
                                                     </button>
                                                 </td>
                                             );
@@ -298,7 +308,7 @@ const TeacherAvailability = () => {
                     </div>
                 </div>
             </div>
-        </motion.div>
+        </div>
     );
 };
 

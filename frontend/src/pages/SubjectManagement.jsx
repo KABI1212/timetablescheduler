@@ -1,5 +1,4 @@
 import React, { useState, useEffect } from 'react';
-import { motion } from 'framer-motion';
 import { apiFetch } from '../utils/api';
 import { useToast } from '../components/ToastProvider';
 
@@ -135,11 +134,7 @@ const SubjectManagement = () => {
     };
 
     return (
-        <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            className="space-y-6"
-        >
+        <div className="space-y-6">
             <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
                 <div>
                     <h1 className="text-3xl font-bold text-white">Subjects</h1>
@@ -272,14 +267,8 @@ const SubjectManagement = () => {
                                 {subjects.length === 0 && (
                                     <tr><td colSpan={9} className="p-4 text-center text-secondary">No subjects yet.</td></tr>
                                 )}
-                                {subjects.map((subject, i) => (
-                                    <motion.tr
-                                        initial={{ opacity: 0, x: -20 }}
-                                        animate={{ opacity: 1, x: 0 }}
-                                        transition={{ delay: i * 0.05 }}
-                                        key={subject.id}
-                                        className="border-b border-white/5 hover:bg-white/5 transition-colors"
-                                    >
+                                {subjects.map((subject) => (
+                                    <tr key={subject.id} className="border-b border-white/5 hover:bg-white/5 transition-colors">
                                         <td className="p-4 text-secondary">#{subject.id}</td>
                                         <td className="p-4 font-semibold text-primary">{subject.code}</td>
                                         <td className="p-4 text-white">{subject.name}</td>
@@ -297,14 +286,14 @@ const SubjectManagement = () => {
                                                 Delete
                                             </button>
                                         </td>
-                                    </motion.tr>
+                                    </tr>
                                 ))}
                             </tbody>
                         </table>
                     </div>
                 )}
             </div>
-        </motion.div>
+        </div>
     );
 };
 

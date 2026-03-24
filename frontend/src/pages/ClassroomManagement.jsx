@@ -1,6 +1,5 @@
 // @ts-nocheck
 import React, { useState, useEffect } from 'react';
-import { motion } from 'framer-motion';
 import { apiFetch } from '../utils/api';
 import { useToast } from '../components/ToastProvider';
 
@@ -137,11 +136,7 @@ const ClassroomManagement = () => {
     };
 
     return (
-        <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            className="space-y-6"
-        >
+        <div className="space-y-6">
             <div>
                 <h1 className="text-3xl font-bold text-white">Classrooms</h1>
                 <p className="text-secondary text-sm">Manage rooms, labs, and maintenance blocks</p>
@@ -257,14 +252,8 @@ const ClassroomManagement = () => {
                                 {classrooms.length === 0 && (
                                     <tr><td colSpan={8} className="p-4 text-center text-secondary">No classrooms yet.</td></tr>
                                 )}
-                                {classrooms.map((room, i) => (
-                                    <motion.tr
-                                        initial={{ opacity: 0, x: -20 }}
-                                        animate={{ opacity: 1, x: 0 }}
-                                        transition={{ delay: i * 0.05 }}
-                                        key={room.id}
-                                        className="border-b border-white/5 hover:bg-white/5 transition-colors"
-                                    >
+                                {classrooms.map((room) => (
+                                    <tr key={room.id} className="border-b border-white/5 hover:bg-white/5 transition-colors">
                                         <td className="p-4 text-secondary">#{room.id}</td>
                                         <td className="p-4 text-white">{room.name}</td>
                                         <td className="p-4 text-secondary">{room.capacity}</td>
@@ -294,14 +283,14 @@ const ClassroomManagement = () => {
                                                 Delete
                                             </button>
                                         </td>
-                                    </motion.tr>
+                                    </tr>
                                 ))}
                             </tbody>
                         </table>
                     </div>
                 )}
             </div>
-        </motion.div>
+        </div>
     );
 };
 

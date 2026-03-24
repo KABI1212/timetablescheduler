@@ -3,6 +3,7 @@ import React, { useMemo, useRef, useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { apiFetch, API_URL } from '../utils/api';
 import { useToast } from '../components/ToastProvider';
+import ConflictPanel from '../components/ConflictPanel';
 
 const days = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
 const timeSlots = [
@@ -322,17 +323,13 @@ const AiTimetableGenerator = () => {
     };
 
     return (
-        <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            className="max-w-7xl mx-auto space-y-8"
-        >
+        <div className="max-w-7xl mx-auto space-y-8">
             <div className="text-center space-y-2">
                 <h1 className="text-4xl font-bold text-white">AI Timetable Generator</h1>
                 <p className="text-secondary italic">Generate multiple draft options, review one, then publish it.</p>
             </div>
 
-            <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+            <div className="grid grid-cols-1 gap-4 md:grid-cols-3 xl:grid-cols-6">
                 <div className="card-glass p-5 rounded-2xl">
                     <div className="text-[10px] uppercase tracking-widest text-secondary mb-2">Workflow State</div>
                     <div className="text-2xl font-bold text-white">{status?.status || 'idle'}</div>
@@ -348,6 +345,14 @@ const AiTimetableGenerator = () => {
                 <div className="card-glass p-5 rounded-2xl">
                     <div className="text-[10px] uppercase tracking-widest text-secondary mb-2">Generated Options</div>
                     <div className="text-2xl font-bold text-white">{status?.option_count || 0}</div>
+                </div>
+                <div className="card-glass p-5 rounded-2xl border border-danger/30">
+                    <div className="text-[10px] uppercase tracking-widest text-secondary mb-2">Draft Hard Conflicts</div>
+                    <div className="text-2xl font-bold text-white">{status?.draft_hard_conflict_count || 0}</div>
+                </div>
+                <div className="card-glass p-5 rounded-2xl border border-warning/30">
+                    <div className="text-[10px] uppercase tracking-widest text-secondary mb-2">Draft Soft Conflicts</div>
+                    <div className="text-2xl font-bold text-white">{status?.draft_soft_conflict_count || 0}</div>
                 </div>
             </div>
 
@@ -390,10 +395,9 @@ const AiTimetableGenerator = () => {
 
             <div className="card-glass p-8 rounded-2xl text-center space-y-6">
                 <div className="h-3 bg-white/5 rounded-full overflow-hidden border border-white/10 relative">
-                    <motion.div
+                    <div
                         className="h-full bg-gradient-to-r from-primary to-primaryGlow"
-                        animate={{ width: `${progress}%` }}
-                        transition={{ ease: 'linear' }}
+                        style={{ width: `${progress}%`, transition: 'width 180ms linear' }}
                     />
                 </div>
 
@@ -403,9 +407,7 @@ const AiTimetableGenerator = () => {
                         {generationInfo && <p className="text-xs mt-1">{generationInfo}</p>}
                     </div>
 
-                    <motion.button
-                        whileHover={{ scale: 1.05 }}
-                        whileTap={{ scale: 0.95 }}
+                    <button
                         onClick={handleGenerate}
                         disabled={isGenerating}
                         className={`px-8 py-3 rounded-xl font-bold tracking-widest uppercase transition-all ${isGenerating
@@ -414,7 +416,7 @@ const AiTimetableGenerator = () => {
                             }`}
                     >
                         {isGenerating ? 'Generating...' : 'Generate Draft Options'}
-                    </motion.button>
+                    </button>
                 </div>
             </div>
 
@@ -470,14 +472,22 @@ const AiTimetableGenerator = () => {
                                     )}
                                 </div>
 
-                                <div className="grid grid-cols-3 gap-3 mt-4 text-sm">
+                                <div className="grid grid-cols-2 gap-3 mt-4 text-sm md:grid-cols-4">
                                     <div>
                                         <div className="text-secondary text-[10px] uppercase tracking-widest">Fitness</div>
                                         <div className="text-white font-semibold">{option.fitness}</div>
                                     </div>
                                     <div>
-                                        <div className="text-secondary text-[10px] uppercase tracking-widest">Conflicts</div>
+                                        <div className="text-secondary text-[10px] uppercase tracking-widest">Total Conflicts</div>
                                         <div className="text-white font-semibold">{option.conflict_count}</div>
+                                    </div>
+                                    <div>
+                                        <div className="text-secondary text-[10px] uppercase tracking-widest">Hard</div>
+                                        <div className="text-white font-semibold">{option.hard_conflict_count || 0}</div>
+                                    </div>
+                                    <div>
+                                        <div className="text-secondary text-[10px] uppercase tracking-widest">Soft</div>
+                                        <div className="text-white font-semibold">{option.soft_conflict_count || 0}</div>
                                     </div>
                                     <div>
                                         <div className="text-secondary text-[10px] uppercase tracking-widest">Entries</div>
@@ -535,6 +545,8 @@ const AiTimetableGenerator = () => {
                     </div>
                 </div>
             </div>
+
+            <ConflictPanel />
 
             <div ref={tableRef}>
                 {loading ? (
@@ -602,7 +614,7 @@ const AiTimetableGenerator = () => {
                     </motion.div>
                 )}
             </div>
-        </motion.div>
+        </div>
     );
 };
 

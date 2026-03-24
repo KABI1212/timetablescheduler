@@ -10,19 +10,21 @@ import React from 'react';
 const BrandMark = ({
     compact = false,
     centered = false,
-    subtitle = 'Smart Timetable OS',
+    subtitle = 'Academic Timetable Suite',
     className = ''
 }) => (
     <div className={`brand-lockup ${compact ? 'brand-lockup-compact' : ''} ${centered ? 'justify-center text-center' : ''} ${className}`}>
         <div className={`brand-mark ${compact ? 'brand-mark-compact' : ''}`}>
-            <span className="brand-core" />
-            <span className="brand-orbit brand-orbit-a" />
-            <span className="brand-orbit brand-orbit-b" />
-            <span className="brand-orbit brand-orbit-c" />
-            <span className="brand-flare" />
+            <span className="brand-shell" />
+            <span className="brand-header" />
+            <span className="brand-crest" />
+            <span className="brand-cell brand-cell-a" />
+            <span className="brand-cell brand-cell-b" />
+            <span className="brand-cell brand-cell-c" />
+            <span className="brand-cell brand-cell-d" />
         </div>
         <div className={centered ? 'text-center' : ''}>
-            <div className="brand-wordmark">LUMOGEN</div>
+            <div className="brand-wordmark">ChronoCampus</div>
             {subtitle ? <div className="brand-tagline">{subtitle}</div> : null}
         </div>
     </div>
