@@ -35,7 +35,7 @@ const findSubstitutes = async ({ subject_id, day_of_week, start_time, exclude_te
 
     const unavailableSet = new Set(
         availability
-            .filter((a) => !a.is_available)
+            .filter((a) => a.status === 'blocked')
             .map((a) => `${a.teacher_id}-${a.day_of_week}-${a.timeslot}`)
     );
 

@@ -35,6 +35,33 @@ if (fs.existsSync(dbPath)) {
   data = JSON.parse(fs.readFileSync(dbPath, 'utf8'));
 }
 
+const normalizeAvailabilityEntry = (entry) => {
+  const normalizedStatus = String(entry?.status || '').trim().toLowerCase();
+  let status = normalizedStatus;
+
+  if (status !== 'preferred' && status !== 'blocked') {
+    if (entry?.is_available === false) {
+      status = 'blocked';
+    } else if (entry?.is_available === true) {
+      status = 'preferred';
+    } else {
+      status = '';
+    }
+  }
+
+  if (!entry?.teacher_id || !entry?.day_of_week || !entry?.timeslot || !status) {
+    return null;
+  }
+
+  return {
+    id: entry.id || null,
+    teacher_id: entry.teacher_id,
+    day_of_week: entry.day_of_week,
+    timeslot: entry.timeslot,
+    status
+  };
+};
+
 const normalizeData = () => {
   data.users = data.users || [];
   data.classrooms = (data.classrooms || []).map((room) => ({
@@ -47,7 +74,16 @@ const normalizeData = () => {
   data.teacher_subjects = data.teacher_subjects || [];
   data.timetable = data.timetable || [];
   data.working_timetable = data.working_timetable || [];
-  data.teacher_availability = data.teacher_availability || [];
+  const availabilityByKey = new Map();
+  (data.teacher_availability || []).forEach((entry) => {
+    const normalized = normalizeAvailabilityEntry(entry);
+    if (!normalized) return;
+    availabilityByKey.set(
+      `${normalized.teacher_id}-${normalized.day_of_week}-${normalized.timeslot}`,
+      normalized
+    );
+  });
+  data.teacher_availability = [...availabilityByKey.values()];
   data.leave_requests = data.leave_requests || [];
   data.absence_records = data.absence_records || [];
   data.notifications = data.notifications || [];
@@ -277,25 +313,36 @@ const query = async (text, params = []) => {
     return { rows };
   }
 
+  if (sql.includes('delete from teacher_availability') && sql.includes('where teacher_id')) {
+    const [teacher_id, day_of_week, timeslot] = params;
+    data.teacher_availability = data.teacher_availability.filter((entry) => !(
+      entry.teacher_id == teacher_id &&
+      entry.day_of_week == day_of_week &&
+      entry.timeslot == timeslot
+    ));
+    save();
+    return { rows: [] };
+  }
+
   if (sql.includes('insert into teacher_availability')) {
-    const [teacher_id, day_of_week, timeslot, is_available] = params;
+    const [teacher_id, day_of_week, timeslot, status] = params;
     const existing = data.teacher_availability.find(a => a.teacher_id == teacher_id && a.day_of_week == day_of_week && a.timeslot == timeslot);
     if (existing) {
-      existing.is_available = Boolean(is_available);
+      existing.status = status;
       save();
       return { rows: [existing] };
     }
-    const item = { id: generateId(), teacher_id, day_of_week, timeslot, is_available: Boolean(is_available) };
+    const item = { id: generateId(), teacher_id, day_of_week, timeslot, status };
     data.teacher_availability.push(item);
     save();
     return { rows: [item] };
   }
 
   if (sql.includes('update teacher_availability')) {
-    const [is_available, teacher_id, day_of_week, timeslot] = params;
+    const [status, teacher_id, day_of_week, timeslot] = params;
     const existing = data.teacher_availability.find(a => a.teacher_id == teacher_id && a.day_of_week == day_of_week && a.timeslot == timeslot);
     if (existing) {
-      existing.is_available = Boolean(is_available);
+      existing.status = status;
       save();
       return { rows: [existing] };
     }

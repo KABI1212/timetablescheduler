@@ -68,17 +68,77 @@ const buildLeaveMap = (leaveRequests) => {
     return leaveMap;
 };
 
-const buildUnavailableSet = (availability) => new Set(
-    availability
-        .filter((entry) => !entry.is_available)
-        .map((entry) => `${entry.teacher_id}-${entry.day_of_week}-${entry.timeslot}`)
-);
+const buildAvailabilityMaps = (availability) => {
+    const blockedSet = new Set();
+    const preferredByTeacher = new Map();
 
-const isTeacherUnavailable = (teacherId, day, startTime, leaveMap, unavailableSet) => {
+    availability.forEach((entry) => {
+        const status = String(entry.status || '').trim().toLowerCase();
+        if (status === 'blocked') {
+            blockedSet.add(`${entry.teacher_id}-${entry.day_of_week}-${entry.timeslot}`);
+            return;
+        }
+        if (status === 'preferred') {
+            const teacherId = Number(entry.teacher_id);
+            const preferred = preferredByTeacher.get(teacherId) || new Set();
+            preferred.add(`${entry.day_of_week}-${entry.timeslot}`);
+            preferredByTeacher.set(teacherId, preferred);
+        }
+    });
+
+    return { blockedSet, preferredByTeacher };
+};
+
+const isTeacherUnavailable = (teacherId, day, startTime, leaveMap, blockedSet) => {
     const leaveDays = leaveMap.get(Number(teacherId));
     if (leaveDays && leaveDays.has(day)) return true;
-    if (unavailableSet.has(`${teacherId}-${day}-${startTime}`)) return true;
+    if (blockedSet.has(`${teacherId}-${day}-${startTime}`)) return true;
     return false;
+};
+
+const teacherHasPreferredSlots = (teacherId, preferredByTeacher) => (
+    (preferredByTeacher.get(Number(teacherId)) || new Set()).size > 0
+);
+
+const isTeacherPreferredSlot = (teacherId, day, startTime, preferredByTeacher) => (
+    Boolean(preferredByTeacher.get(Number(teacherId))?.has(`${day}-${startTime}`))
+);
+
+const createConflict = ({
+    id,
+    type,
+    details,
+    level = 'hard',
+    severity = 'error',
+    constraint_code,
+    ...rest
+}) => ({
+    id,
+    type,
+    details,
+    level,
+    severity,
+    constraint_code,
+    ...rest
+});
+
+const summarizeConflicts = (conflicts) => {
+    const byType = new Map();
+
+    conflicts.forEach((conflict) => {
+        byType.set(conflict.type, (byType.get(conflict.type) || 0) + 1);
+    });
+
+    return {
+        total: conflicts.length,
+        hard: conflicts.filter((conflict) => conflict.level === 'hard').length,
+        soft: conflicts.filter((conflict) => conflict.level === 'soft').length,
+        error: conflicts.filter((conflict) => conflict.severity === 'error').length,
+        warning: conflicts.filter((conflict) => conflict.severity === 'warning').length,
+        by_type: [...byType.entries()]
+            .map(([type, count]) => ({ type, count }))
+            .sort((a, b) => b.count - a.count || a.type.localeCompare(b.type))
+    };
 };
 
 const loadLookupData = async () => {
@@ -140,7 +200,7 @@ const analyzeSchedule = async (scheduleRows, options = {}) => {
     });
 
     const leaveMap = buildLeaveMap(leaveRequests);
-    const unavailableSet = buildUnavailableSet(availability);
+    const { blockedSet, preferredByTeacher } = buildAvailabilityMaps(availability);
     const teacherSlots = new Map();
     const roomSlots = new Map();
     const teacherDailyCount = new Map();
@@ -148,7 +208,8 @@ const analyzeSchedule = async (scheduleRows, options = {}) => {
     const conflicts = [];
 
     scheduleRows.forEach((entry) => {
-        const teacherId = Number(entry.teacher_id);
+        const teacherId = Number(entry.substitute_teacher_id || entry.teacher_id);
+        const originalTeacherId = Number(entry.teacher_id);
         const roomId = Number(entry.classroom_id);
         const room = classroomById.get(roomId);
         const teacherName = teacherNameById.get(teacherId) || `Teacher ${teacherId}`;
@@ -158,89 +219,119 @@ const analyzeSchedule = async (scheduleRows, options = {}) => {
         const roomSlotKey = `${slotKey}-${roomId}`;
 
         if (room?.maintenance_mode) {
-            conflicts.push({
+            conflicts.push(createConflict({
                 id: `maintenance-${entry.id || roomSlotKey}`,
                 type: 'Room under maintenance',
                 details: `${roomName} is blocked for maintenance${room.maintenance_note ? `: ${room.maintenance_note}` : '.'}`,
+                constraint_code: 'room_maintenance',
                 entry_id: entry.id,
                 classroom_id: roomId,
                 day_of_week: entry.day_of_week,
                 start_time: entry.start_time
-            });
+            }));
         }
 
         if (teacherSlots.has(teacherSlotKey)) {
-            conflicts.push({
+            conflicts.push(createConflict({
                 id: `teacher-${entry.id || teacherSlotKey}`,
                 type: 'Teacher double-booked',
                 details: `${teacherName} is assigned twice on ${entry.day_of_week} at ${entry.start_time}.`,
+                constraint_code: 'teacher_double_booked',
                 entry_id: entry.id,
                 teacher_id: teacherId,
+                original_teacher_id: originalTeacherId,
                 day_of_week: entry.day_of_week,
                 start_time: entry.start_time
-            });
+            }));
         } else {
             teacherSlots.set(teacherSlotKey, entry.id);
         }
 
         if (roomSlots.has(roomSlotKey)) {
-            conflicts.push({
+            conflicts.push(createConflict({
                 id: `room-${entry.id || roomSlotKey}`,
                 type: 'Room double-booked',
                 details: `${roomName} is assigned twice on ${entry.day_of_week} at ${entry.start_time}.`,
+                constraint_code: 'room_double_booked',
                 entry_id: entry.id,
                 classroom_id: roomId,
                 day_of_week: entry.day_of_week,
                 start_time: entry.start_time
-            });
+            }));
         } else {
             roomSlots.set(roomSlotKey, entry.id);
         }
 
-        if (isTeacherUnavailable(teacherId, entry.day_of_week, entry.start_time, leaveMap, unavailableSet)) {
-            conflicts.push({
+        if (isTeacherUnavailable(teacherId, entry.day_of_week, entry.start_time, leaveMap, blockedSet)) {
+            conflicts.push(createConflict({
                 id: `leave-${entry.id || `${teacherId}-${entry.day_of_week}-${entry.start_time}`}`,
                 type: 'Teacher unavailable',
                 details: `${teacherName} is unavailable on ${entry.day_of_week} at ${entry.start_time}.`,
+                constraint_code: 'teacher_unavailable',
                 entry_id: entry.id,
                 teacher_id: teacherId,
+                original_teacher_id: originalTeacherId,
                 day_of_week: entry.day_of_week,
                 start_time: entry.start_time
-            });
+            }));
+        } else if (
+            teacherHasPreferredSlots(teacherId, preferredByTeacher)
+            && !isTeacherPreferredSlot(teacherId, entry.day_of_week, entry.start_time, preferredByTeacher)
+        ) {
+            conflicts.push(createConflict({
+                id: `preferred-${entry.id || `${teacherId}-${entry.day_of_week}-${entry.start_time}`}`,
+                type: 'Teacher preference missed',
+                details: `${teacherName} prefers other time slots than ${entry.day_of_week} at ${entry.start_time}.`,
+                level: 'soft',
+                severity: 'warning',
+                constraint_code: 'teacher_preference_missed',
+                entry_id: entry.id,
+                teacher_id: teacherId,
+                original_teacher_id: originalTeacherId,
+                day_of_week: entry.day_of_week,
+                start_time: entry.start_time
+            }));
         }
 
         const dailyKey = `${teacherId}-${entry.day_of_week}`;
         const dailyCount = (teacherDailyCount.get(dailyKey) || 0) + 1;
         teacherDailyCount.set(dailyKey, dailyCount);
         if (dailyCount > 6) {
-            conflicts.push({
+            conflicts.push(createConflict({
                 id: `overload-day-${entry.id || dailyKey}`,
                 type: 'Teacher daily overload',
                 details: `${teacherName} exceeds the daily limit on ${entry.day_of_week}.`,
+                constraint_code: 'teacher_daily_overload',
                 entry_id: entry.id,
                 teacher_id: teacherId,
+                original_teacher_id: originalTeacherId,
                 day_of_week: entry.day_of_week,
                 start_time: entry.start_time
-            });
+            }));
         }
 
         const weeklyCount = (teacherWeeklyCount.get(teacherId) || 0) + 1;
         teacherWeeklyCount.set(teacherId, weeklyCount);
         const teacherMax = Number(teacherById.get(teacherId)?.max_hours_per_week || 0);
         if (teacherMax > 0 && weeklyCount > teacherMax) {
-            conflicts.push({
+            conflicts.push(createConflict({
                 id: `overload-week-${entry.id || teacherId}`,
                 type: 'Teacher weekly overload',
                 details: `${teacherName} exceeds the weekly workload limit (${teacherMax}).`,
+                constraint_code: 'teacher_weekly_overload',
                 entry_id: entry.id,
                 teacher_id: teacherId,
+                original_teacher_id: originalTeacherId,
                 day_of_week: entry.day_of_week,
                 start_time: entry.start_time
-            });
+            }));
         }
     });
 
-    return conflicts;
+    return {
+        conflicts,
+        summary: summarizeConflicts(conflicts)
+    };
 };
 
 const summarizeOption = (option, workflow) => ({
@@ -249,6 +340,8 @@ const summarizeOption = (option, workflow) => ({
     created_at: option.created_at,
     fitness: option.fitness,
     conflict_count: option.conflict_count,
+    hard_conflict_count: option.hard_conflict_count || 0,
+    soft_conflict_count: option.soft_conflict_count || 0,
     entry_count: option.entry_count,
     is_selected: workflow.working_option_id === option.id,
     is_published: workflow.published_option_id === option.id
@@ -387,7 +480,7 @@ exports.generateTimetable = async (_req, res) => {
             }
 
             seenSignatures.add(signature);
-            const conflicts = await analyzeSchedule(schedule, {
+            const analysis = await analyzeSchedule(schedule, {
                 teachers: teachers.rows,
                 leaveRequests: leaveRequests.rows,
                 availability: availability.rows
@@ -398,7 +491,9 @@ exports.generateTimetable = async (_req, res) => {
                 label: `Option ${options.length + 1}`,
                 created_at: new Date().toISOString(),
                 fitness: scheduler.calculateFitness(schedule),
-                conflict_count: conflicts.length,
+                conflict_count: analysis.summary.total,
+                hard_conflict_count: analysis.summary.hard,
+                soft_conflict_count: analysis.summary.soft,
                 entry_count: schedule.length,
                 schedule: sortSchedule(schedule)
             });
@@ -498,6 +593,9 @@ exports.getTimetableStatus = async (_req, res) => {
         const working = db.getWorkingTimetable();
         const versions = db.getTimetableVersions();
         const { rows: classrooms } = await db.query('SELECT * FROM classrooms');
+        const conflictAnalysis = working.length > 0
+            ? await analyzeSchedule(working)
+            : { summary: summarizeConflicts([]) };
 
         res.json({
             ...workflow,
@@ -505,6 +603,9 @@ exports.getTimetableStatus = async (_req, res) => {
             version_count: versions.length,
             published_entry_count: published.length,
             draft_entry_count: working.length,
+            draft_conflict_count: conflictAnalysis.summary.total,
+            draft_hard_conflict_count: conflictAnalysis.summary.hard,
+            draft_soft_conflict_count: conflictAnalysis.summary.soft,
             maintenance_block_count: classrooms.filter((room) => room.maintenance_mode).length,
             has_published: published.length > 0,
             has_draft: working.length > 0
@@ -734,8 +835,8 @@ const detectConflicts = async () => analyzeSchedule(db.getWorkingTimetable());
  */
 exports.getConflicts = async (_req, res) => {
     try {
-        const conflicts = await detectConflicts();
-        res.json(conflicts);
+        const analysis = await detectConflicts();
+        res.json(analysis);
     } catch (err) {
         console.error(err);
         res.status(500).json({ error: 'Server error' });
@@ -749,13 +850,18 @@ exports.getConflicts = async (_req, res) => {
 exports.fixConflict = async (req, res) => {
     try {
         const { conflictId } = req.body;
-        const conflicts = await detectConflicts();
-        const conflict = conflicts.find((candidate) => candidate.id === conflictId);
+        const analysis = await detectConflicts();
+        const conflict = analysis.conflicts.find((candidate) => candidate.id === conflictId);
         if (!conflict) return res.status(404).json({ error: 'Conflict not found' });
 
         const timetable = db.getWorkingTimetable();
 
-        if (conflict.id.startsWith('teacher') || conflict.id.startsWith('leave') || conflict.id.startsWith('overload')) {
+        if ([
+            'teacher_double_booked',
+            'teacher_unavailable',
+            'teacher_daily_overload',
+            'teacher_weekly_overload'
+        ].includes(conflict.constraint_code)) {
             const entry = timetable.find((item) => item.id == conflict.entry_id);
             if (!entry) return res.status(400).json({ error: 'Unable to locate conflict entry' });
 
@@ -770,7 +876,7 @@ exports.fixConflict = async (req, res) => {
 
             entry.substitute_teacher_id = suggestions[0].teacher_id;
             db.replaceWorkingTimetable(timetable);
-        } else if (conflict.id.startsWith('room')) {
+        } else if (['room_double_booked', 'room_maintenance'].includes(conflict.constraint_code)) {
             const entry = timetable.find((item) => item.id == conflict.entry_id);
             if (!entry) return res.status(400).json({ error: 'Unable to locate conflict entry' });
 
@@ -778,11 +884,16 @@ exports.fixConflict = async (req, res) => {
             const occupiedRooms = timetable
                 .filter((item) => item.day_of_week === entry.day_of_week && item.start_time === entry.start_time)
                 .map((item) => Number(item.classroom_id));
-            const availableRoom = classrooms.find((room) => !occupiedRooms.includes(Number(room.id)));
+            const availableRoom = classrooms.find((room) => (
+                !occupiedRooms.includes(Number(room.id))
+                && !room.maintenance_mode
+            ));
             if (!availableRoom) return res.status(400).json({ error: 'No available room' });
 
             entry.classroom_id = availableRoom.id;
             db.replaceWorkingTimetable(timetable);
+        } else {
+            return res.status(400).json({ error: 'Auto-fix is not available for this conflict type' });
         }
 
         res.json({ message: 'Conflict fixed' });
@@ -812,13 +923,13 @@ exports.validateSwap = async (req, res) => {
         ]);
 
         const leaveMap = buildLeaveMap(leaveRequests);
-        const unavailableSet = buildUnavailableSet(availability);
+        const { blockedSet } = buildAvailabilityMaps(availability);
         const teacherUnavailable = (teacherId, day, start) => isTeacherUnavailable(
             teacherId,
             day,
             start,
             leaveMap,
-            unavailableSet
+            blockedSet
         );
 
         const targetEntry = timetable.find((item) =>

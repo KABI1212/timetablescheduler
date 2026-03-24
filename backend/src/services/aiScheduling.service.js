@@ -1,3 +1,4 @@
+// @ts-nocheck
 const DAYS = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
 const TIMESLOTS = [
     { start: '09:15:00', end: '10:00:00' }, // P1
@@ -11,6 +12,40 @@ const TIMESLOTS = [
 ];
 const LAB_BLOCK_LENGTH = 2;
 const TOTAL_PERIODS_PER_CLASSROOM = DAYS.length * TIMESLOTS.length;
+const MAX_TEACHER_DAILY_LOAD = 6;
+const THEORY_PICK_LIMIT = 3;
+const LAB_PICK_LIMIT = 4;
+
+const getCount = (map, key) => map.get(key) || 0;
+
+const incrementCount = (map, key, amount = 1) => {
+    const next = getCount(map, key) + amount;
+    map.set(key, next);
+    return next;
+};
+
+const getOrCreate = (map, key, factory) => {
+    let value = map.get(key);
+    if (!value) {
+        value = factory();
+        map.set(key, value);
+    }
+    return value;
+};
+
+const shuffleList = (list) => {
+    const copy = [...list];
+    for (let i = copy.length - 1; i > 0; i -= 1) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [copy[i], copy[j]] = [copy[j], copy[i]];
+    }
+    return copy;
+};
+
+const pickRandom = (list, limit = list.length) => {
+    const pickCount = Math.min(limit, list.length);
+    return list[Math.floor(Math.random() * pickCount)];
+};
 
 class TimetableScheduler {
     /**
@@ -32,8 +67,15 @@ class TimetableScheduler {
         this.subjectById = new Map(this.subjects.map((subject) => [Number(subject.id), subject]));
         this.classroomSubjectTargets = this.buildClassroomSubjectTargets();
         this.teacherRequiredHours = new Map();
-
         this.subjectTeacherMap = new Map();
+        this.buildTeacherAssignmentMaps(teacherMappings);
+        this.leaveMap = this.buildLeaveMap(options.leaveRequests || []);
+        const availabilityMaps = this.buildAvailabilityMaps(options.availability || []);
+        this.blockedAvailability = availabilityMaps.blockedAvailability;
+        this.preferredAvailability = availabilityMaps.preferredAvailability;
+    }
+
+    buildTeacherAssignmentMaps(teacherMappings) {
         teacherMappings.forEach((mapping) => {
             const teacherId = Number(mapping.teacher_id || mapping.id);
             const subjectId = Number(mapping.subject_id);
@@ -42,14 +84,13 @@ class TimetableScheduler {
             }
             if (!teacherId) return;
             const requiredHours = this.getTargetSubjectTotalHours(subjectId) * this.classrooms.length;
-            this.teacherRequiredHours.set(
-                teacherId,
-                (this.teacherRequiredHours.get(teacherId) || 0) + requiredHours
-            );
+            incrementCount(this.teacherRequiredHours, teacherId, requiredHours);
         });
+    }
 
-        this.leaveMap = new Map();
-        (options.leaveRequests || []).forEach((request) => {
+    buildLeaveMap(leaveRequests) {
+        const leaveMap = new Map();
+        leaveRequests.forEach((request) => {
             if (request.status !== 'Approved') return;
             const days = new Set();
             const from = new Date(request.from_date);
@@ -61,15 +102,80 @@ class TimetableScheduler {
                 days.add(dayName);
                 cursor.setDate(cursor.getDate() + 1);
             }
-            this.leaveMap.set(request.teacher_id, days);
+            leaveMap.set(request.teacher_id, days);
         });
+        return leaveMap;
+    }
 
-        this.unavailableMap = new Set();
-        (options.availability || []).forEach((entry) => {
-            if (!entry.is_available) {
-                this.unavailableMap.add(`${entry.teacher_id}-${entry.day_of_week}-${entry.timeslot}`);
+    buildAvailabilityMaps(availabilityEntries) {
+        const blockedAvailability = new Set();
+        const preferredAvailability = new Map();
+        availabilityEntries.forEach((entry) => {
+            const status = String(entry.status || '').trim().toLowerCase();
+            const slotKey = `${entry.teacher_id}-${entry.day_of_week}-${entry.timeslot}`;
+            if (status === 'blocked') {
+                blockedAvailability.add(slotKey);
+                return;
+            }
+            if (status === 'preferred') {
+                const teacherId = Number(entry.teacher_id);
+                getOrCreate(preferredAvailability, teacherId, () => new Set()).add(`${entry.day_of_week}-${entry.timeslot}`);
             }
         });
+        return { blockedAvailability, preferredAvailability };
+    }
+
+    createClassroomState() {
+        const remainingTheory = new Map();
+        const remainingLabBlocks = new Map();
+        const dayLimit = new Map();
+
+        this.subjects.forEach((subject) => {
+            const target = this.getTargetForSubject(subject.id);
+            remainingTheory.set(subject.id, target.theoryHours);
+            remainingLabBlocks.set(subject.id, target.labBlocks);
+            dayLimit.set(subject.id, Math.max(1, Math.ceil(target.totalHours / DAYS.length)));
+        });
+
+        return {
+            occupied: new Set(),
+            remainingTheory,
+            remainingLabBlocks,
+            dayUsage: new Map(),
+            labDayUsage: new Map(),
+            labBlockUsage: new Map(),
+            dayLimit,
+            prevByDay: new Map()
+        };
+    }
+
+    canUseSlotWindow({ teacherId, day, startIndex, length, occupied, teacherSlots, teacherDailyCount }) {
+        const dailyKey = `${teacherId}-${day}`;
+        const dailyCount = getCount(teacherDailyCount, dailyKey);
+
+        if (dailyCount + length > MAX_TEACHER_DAILY_LOAD) return false;
+
+        for (let offset = 0; offset < length; offset += 1) {
+            const slotIndex = startIndex + offset;
+            const slot = TIMESLOTS[slotIndex];
+            if (!slot) return false;
+            if (offset < length - 1 && slot.breakAfter) return false;
+            if (occupied.has(`${day}-${slot.start}`)) return false;
+            if (teacherSlots.has(`${day}-${slot.start}-${teacherId}`)) return false;
+            if (this.isTeacherUnavailable(teacherId, day, slot.start)) return false;
+        }
+
+        return true;
+    }
+
+    getWindowPreferencePenalty(teacherId, day, startIndex, length = 1) {
+        let penalty = 0;
+        for (let offset = 0; offset < length; offset += 1) {
+            const slot = TIMESLOTS[startIndex + offset];
+            if (!slot) return Number.POSITIVE_INFINITY;
+            penalty += this.getPreferredSlotPenalty(teacherId, day, slot.start);
+        }
+        return penalty;
     }
 
     /**
@@ -168,8 +274,39 @@ class TimetableScheduler {
     isTeacherUnavailable(teacherId, day, timeslot) {
         const leaveDays = this.leaveMap.get(teacherId);
         if (leaveDays && leaveDays.has(day)) return true;
-        if (this.unavailableMap.has(`${teacherId}-${day}-${timeslot}`)) return true;
+        if (this.blockedAvailability.has(`${teacherId}-${day}-${timeslot}`)) return true;
         return false;
+    }
+
+    /**
+     * @param {number} teacherId
+     * @returns {boolean}
+     */
+    hasPreferredSlots(teacherId) {
+        return (this.preferredAvailability.get(Number(teacherId)) || new Set()).size > 0;
+    }
+
+    /**
+     * @param {number} teacherId
+     * @param {string} day
+     * @param {string} timeslot
+     * @returns {boolean}
+     */
+    isPreferredSlot(teacherId, day, timeslot) {
+        return Boolean(this.preferredAvailability.get(Number(teacherId))?.has(`${day}-${timeslot}`));
+    }
+
+    /**
+     * Preferred slots are soft constraints. If a teacher has declared preferences,
+     * any class placed outside that set receives a small penalty.
+     * @param {number} teacherId
+     * @param {string} day
+     * @param {string} timeslot
+     * @returns {number}
+     */
+    getPreferredSlotPenalty(teacherId, day, timeslot) {
+        if (!this.hasPreferredSlots(teacherId)) return 0;
+        return this.isPreferredSlot(teacherId, day, timeslot) ? 0 : 1;
     }
 
     /**
@@ -191,15 +328,6 @@ class TimetableScheduler {
         let bestMissing = Number.POSITIVE_INFINITY;
         let bestFitness = Number.POSITIVE_INFINITY;
 
-        const shuffle = (list) => {
-            const copy = [...list];
-            for (let i = copy.length - 1; i > 0; i -= 1) {
-                const j = Math.floor(Math.random() * (i + 1));
-                [copy[i], copy[j]] = [copy[j], copy[i]];
-            }
-            return copy;
-        };
-
         const buildAttempt = () => {
             const schedule = [];
             const teacherSlots = new Set();
@@ -208,62 +336,35 @@ class TimetableScheduler {
             let missing = 0;
 
             for (const classroom of classrooms) {
-                const occupied = new Set();
-                const remainingTheory = new Map();
-                const remainingLabBlocks = new Map();
-                const dayUsage = new Map();
-                const labDayUsage = new Map();
-                const dayLimit = new Map();
-                const prevByDay = new Map();
+                const {
+                    occupied,
+                    remainingTheory,
+                    remainingLabBlocks,
+                    dayUsage,
+                    labDayUsage,
+                    labBlockUsage,
+                    dayLimit,
+                    prevByDay
+                } = this.createClassroomState();
                 const getRemainingLoad = (subject) =>
-                    (remainingTheory.get(subject.id) || 0) +
-                    ((remainingLabBlocks.get(subject.id) || 0) * this.getLabDuration(subject));
-
-                subjects.forEach((subject) => {
-                    const target = this.getTargetForSubject(subject.id);
-                    remainingTheory.set(subject.id, target.theoryHours);
-                    remainingLabBlocks.set(subject.id, target.labBlocks);
-                    dayLimit.set(subject.id, Math.max(1, Math.ceil(target.totalHours / DAYS.length)));
-                });
+                    getCount(remainingTheory, subject.id) +
+                    (getCount(remainingLabBlocks, subject.id) * this.getLabDuration(subject));
+                const getLabBlockUsage = (slotIndex) => getCount(labBlockUsage, slotIndex);
+                const getDaySubjectUsage = (day, subjectId) => getCount(dayUsage.get(day) || new Map(), subjectId);
 
                 const incrementDayUsage = (day, subjectId, amount = 1) => {
-                    const usage = dayUsage.get(day) || new Map();
-                    usage.set(subjectId, (usage.get(subjectId) || 0) + amount);
-                    dayUsage.set(day, usage);
+                    incrementCount(getOrCreate(dayUsage, day, () => new Map()), subjectId, amount);
                 };
 
                 const markLabDay = (day, subjectId) => {
-                    const usage = labDayUsage.get(day) || new Set();
-                    usage.add(subjectId);
-                    labDayUsage.set(day, usage);
-                };
-
-                const canUseSlotWindow = (teacherId, day, startIndex, length) => {
-                    const dailyKey = `${teacherId}-${day}`;
-                    const dailyCount = teacherDailyCount.get(dailyKey) || 0;
-
-                    if (dailyCount + length > 6) return false;
-
-                    for (let offset = 0; offset < length; offset += 1) {
-                        const slotIndex = startIndex + offset;
-                        const slot = TIMESLOTS[slotIndex];
-                        if (!slot) return false;
-                        if (offset < length - 1 && slot.breakAfter) return false;
-                        if (occupied.has(`${day}-${slot.start}`)) return false;
-                        if (teacherSlots.has(`${day}-${slot.start}-${teacherId}`)) return false;
-                        if (this.isTeacherUnavailable(teacherId, day, slot.start)) return false;
-                    }
-
-                    return true;
+                    getOrCreate(labDayUsage, day, () => new Set()).add(subjectId);
                 };
 
                 const canPlace = (day, slotIndex, subject, allowOverLimit) => {
                     const teacherId = this.subjectTeacherMap.get(subject.id);
                     if (!teacherId) return false;
-                    if ((remainingTheory.get(subject.id) || 0) <= 0) return false;
-                    const usage = dayUsage.get(day) || new Map();
-                    const usageCount = usage.get(subject.id) || 0;
-                    if (!allowOverLimit && usageCount >= (dayLimit.get(subject.id) || 1)) return false;
+                    if (getCount(remainingTheory, subject.id) <= 0) return false;
+                    if (!allowOverLimit && getDaySubjectUsage(day, subject.id) >= getCount(dayLimit, subject.id)) return false;
                     const previousSlot = TIMESLOTS[slotIndex - 1];
                     if (previousSlot) {
                         const previousEntry = schedule.find((entry) =>
@@ -275,17 +376,32 @@ class TimetableScheduler {
                             return false;
                         }
                     }
-                    return canUseSlotWindow(teacherId, day, slotIndex, 1);
+                    return this.canUseSlotWindow({
+                        teacherId,
+                        day,
+                        startIndex: slotIndex,
+                        length: 1,
+                        occupied,
+                        teacherSlots,
+                        teacherDailyCount
+                    });
                 };
 
                 const canPlaceLab = (day, startIndex, subject) => {
                     const teacherId = this.subjectTeacherMap.get(subject.id);
                     if (!teacherId) return false;
-                    if ((remainingLabBlocks.get(subject.id) || 0) <= 0) return false;
+                    if (getCount(remainingLabBlocks, subject.id) <= 0) return false;
                     if (startIndex % LAB_BLOCK_LENGTH !== 0) return false;
-                    const usage = labDayUsage.get(day) || new Set();
-                    if (usage.has(subject.id)) return false;
-                    return canUseSlotWindow(teacherId, day, startIndex, this.getLabDuration(subject));
+                    if ((labDayUsage.get(day) || new Set()).has(subject.id)) return false;
+                    return this.canUseSlotWindow({
+                        teacherId,
+                        day,
+                        startIndex,
+                        length: this.getLabDuration(subject),
+                        occupied,
+                        teacherSlots,
+                        teacherDailyCount
+                    });
                 };
 
                 const placeEntry = (subject, day, slotIndex, sessionType) => {
@@ -306,8 +422,8 @@ class TimetableScheduler {
                     teacherSlots.add(`${day}-${slot.start}-${teacherId}`);
 
                     const dailyKey = `${teacherId}-${day}`;
-                    teacherDailyCount.set(dailyKey, (teacherDailyCount.get(dailyKey) || 0) + 1);
-                    teacherWeeklyCount.set(teacherId, (teacherWeeklyCount.get(teacherId) || 0) + 1);
+                    incrementCount(teacherDailyCount, dailyKey);
+                    incrementCount(teacherWeeklyCount, teacherId);
                 };
 
                 const placeLabBlock = (subject, day, startIndex) => {
@@ -315,7 +431,8 @@ class TimetableScheduler {
                     for (let offset = 0; offset < duration; offset += 1) {
                         placeEntry(subject, day, startIndex + offset, 'lab');
                     }
-                    remainingLabBlocks.set(subject.id, Math.max(0, (remainingLabBlocks.get(subject.id) || 0) - 1));
+                    incrementCount(labBlockUsage, startIndex);
+                    remainingLabBlocks.set(subject.id, Math.max(0, getCount(remainingLabBlocks, subject.id) - 1));
                     incrementDayUsage(day, subject.id, duration);
                     markLabDay(day, subject.id);
                 };
@@ -328,48 +445,58 @@ class TimetableScheduler {
                         if (filtered.length > 0) candidates = filtered;
                     }
                     candidates.sort((a, b) => {
+                        const teacherPenaltyA = this.getWindowPreferencePenalty(this.subjectTeacherMap.get(a.id), day, slotIndex);
+                        const teacherPenaltyB = this.getWindowPreferencePenalty(this.subjectTeacherMap.get(b.id), day, slotIndex);
+                        if (teacherPenaltyA !== teacherPenaltyB) return teacherPenaltyA - teacherPenaltyB;
                         const remainingDiff = getRemainingLoad(b) - getRemainingLoad(a);
                         if (remainingDiff !== 0) return remainingDiff;
-                        const usageA = (dayUsage.get(day) || new Map()).get(a.id) || 0;
-                        const usageB = (dayUsage.get(day) || new Map()).get(b.id) || 0;
+                        const usageA = getDaySubjectUsage(day, a.id);
+                        const usageB = getDaySubjectUsage(day, b.id);
                         if (usageA !== usageB) return usageA - usageB;
                         return Math.random() - 0.5;
                     });
-                    const pickCount = Math.min(3, candidates.length);
-                    return candidates[Math.floor(Math.random() * pickCount)];
+                    return pickRandom(candidates, THEORY_PICK_LIMIT);
                 };
 
-                const labSubjects = shuffle(subjects.filter((subject) => this.getLabHours(subject) > 0));
+                const labSubjects = shuffleList(subjects.filter((subject) => this.getLabHours(subject) > 0));
                 for (const subject of labSubjects) {
-                    while ((remainingLabBlocks.get(subject.id) || 0) > 0) {
+                    while (getCount(remainingLabBlocks, subject.id) > 0) {
                         const placements = [];
-                        shuffle(DAYS).forEach((day) => {
+                        shuffleList(DAYS).forEach((day) => {
                             for (let slotIndex = 0; slotIndex < TIMESLOTS.length; slotIndex += 1) {
                                 if (canPlaceLab(day, slotIndex, subject)) {
-                                    const usage = dayUsage.get(day) || new Map();
                                     placements.push({
                                         day,
                                         slotIndex,
-                                        score: usage.get(subject.id) || 0
+                                        tieBreaker: Math.random(),
+                                        score: getDaySubjectUsage(day, subject.id)
+                                            + getLabBlockUsage(slotIndex)
+                                            + this.getWindowPreferencePenalty(
+                                                this.subjectTeacherMap.get(subject.id),
+                                                day,
+                                                slotIndex,
+                                                this.getLabDuration(subject)
+                                            ) * 2
                                     });
                                 }
                             }
                         });
 
                         if (placements.length === 0) {
-                            missing += this.getLabDuration(subject) * (remainingLabBlocks.get(subject.id) || 0);
+                            missing += this.getLabDuration(subject) * getCount(remainingLabBlocks, subject.id);
                             remainingLabBlocks.set(subject.id, 0);
                             break;
                         }
 
-                        placements.sort((a, b) => a.score - b.score || a.slotIndex - b.slotIndex);
-                        const pickCount = Math.min(3, placements.length);
-                        const placement = placements[Math.floor(Math.random() * pickCount)];
+                        // Spread labs across all valid double-period windows instead of
+                        // always drifting toward the earliest morning slots.
+                        placements.sort((a, b) => a.score - b.score || a.tieBreaker - b.tieBreaker);
+                        const placement = pickRandom(placements, LAB_PICK_LIMIT);
                         placeLabBlock(subject, placement.day, placement.slotIndex);
                     }
                 }
 
-                const dayOrder = shuffle(DAYS);
+                const dayOrder = shuffleList(DAYS);
                 for (const day of dayOrder) {
                     prevByDay.set(day, null);
                     for (let slotIndex = 0; slotIndex < TIMESLOTS.length; slotIndex += 1) {
@@ -385,7 +512,7 @@ class TimetableScheduler {
                             continue;
                         }
                         placeEntry(subject, day, slotIndex, 'theory');
-                        remainingTheory.set(subject.id, Math.max(0, (remainingTheory.get(subject.id) || 0) - 1));
+                        remainingTheory.set(subject.id, Math.max(0, getCount(remainingTheory, subject.id) - 1));
                         incrementDayUsage(day, subject.id);
                         prevByDay.set(day, subject.id);
                     }
@@ -449,21 +576,18 @@ class TimetableScheduler {
             classroomUsage.set(cKey, true);
 
             const classDaySubjKey = `${entry.classroom_id}-${entry.day_of_week}-${entry.subject_id}`;
-            const count = dailySubjectCount.get(classDaySubjKey) || 0;
-            dailySubjectCount.set(classDaySubjKey, count + 1);
+            const count = incrementCount(dailySubjectCount, classDaySubjKey);
             const dayLimit = dayLimitBySubject.get(entry.subject_id) || 1;
-            if (count + 1 > dayLimit) conflicts += 8;
+            if (count > dayLimit) conflicts += 8;
 
             const teacherDayKey = `${entry.teacher_id}-${entry.day_of_week}`;
-            const tCount = teacherDailyCount.get(teacherDayKey) || 0;
-            teacherDailyCount.set(teacherDayKey, tCount + 1);
-            if (tCount + 1 > 6) conflicts += 15;
+            const tCount = incrementCount(teacherDailyCount, teacherDayKey);
+            if (tCount > MAX_TEACHER_DAILY_LOAD) conflicts += 15;
 
-            const weeklyCount = teacherWeeklyCount.get(entry.teacher_id) || 0;
-            teacherWeeklyCount.set(entry.teacher_id, weeklyCount + 1);
+            const weeklyCount = incrementCount(teacherWeeklyCount, entry.teacher_id);
             const weeklyLimit = this.teacherMaxHours.get(Number(entry.teacher_id)) || 0;
             const requiredHours = this.teacherRequiredHours.get(Number(entry.teacher_id)) || 0;
-            if (weeklyLimit > 0 && requiredHours <= weeklyLimit && weeklyCount + 1 > weeklyLimit) {
+            if (weeklyLimit > 0 && requiredHours <= weeklyLimit && weeklyCount > weeklyLimit) {
                 conflicts += 40;
             }
 
@@ -471,13 +595,14 @@ class TimetableScheduler {
                 conflicts += 120;
             }
 
+            conflicts += this.getPreferredSlotPenalty(entry.teacher_id, entry.day_of_week, entry.start_time) * 6;
+
             const subjectKey = `${entry.classroom_id}-${entry.subject_id}`;
-            actualCounts.set(subjectKey, (actualCounts.get(subjectKey) || 0) + 1);
+            incrementCount(actualCounts, subjectKey);
 
             const classDayKey = `${entry.classroom_id}-${entry.day_of_week}`;
-            const list = classDayEntries.get(classDayKey) || [];
+            const list = getOrCreate(classDayEntries, classDayKey, () => []);
             list.push(entry);
-            classDayEntries.set(classDayKey, list);
         }
 
         for (const [key, desired] of desiredCounts.entries()) {

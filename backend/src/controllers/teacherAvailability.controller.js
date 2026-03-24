@@ -1,4 +1,5 @@
 const db = require('../config/db');
+const VALID_AVAILABILITY_STATUSES = new Set(['preferred', 'blocked']);
 
 /**
  * @param {import('express').Request & { user?: any }} req
@@ -23,13 +24,26 @@ exports.getAvailability = async (req, res) => {
  */
 exports.updateAvailability = async (req, res) => {
     try {
-        const { day_of_week, timeslot, is_available } = req.body;
+        const { day_of_week, timeslot } = req.body;
+        const status = req.body.status == null ? null : String(req.body.status).trim().toLowerCase();
         const { rows: teachers } = await db.query('SELECT * FROM teachers');
         const teacher = teachers.find((t) => t.user_id == req.user?.id);
         if (!teacher) return res.status(404).json({ error: 'Teacher not found' });
+        if (status !== null && !VALID_AVAILABILITY_STATUSES.has(status)) {
+            return res.status(400).json({ error: 'Status must be preferred, blocked, or null.' });
+        }
+
+        if (status === null) {
+            await db.query(
+                'DELETE FROM teacher_availability WHERE teacher_id = $1 AND day_of_week = $2 AND timeslot = $3',
+                [teacher.id, day_of_week, timeslot]
+            );
+            return res.json({ teacher_id: teacher.id, day_of_week, timeslot, status: null });
+        }
+
         const result = await db.query(
-            'INSERT INTO teacher_availability (teacher_id, day_of_week, timeslot, is_available) VALUES ($1, $2, $3, $4) RETURNING *',
-            [teacher.id, day_of_week, timeslot, is_available]
+            'INSERT INTO teacher_availability (teacher_id, day_of_week, timeslot, status) VALUES ($1, $2, $3, $4) RETURNING *',
+            [teacher.id, day_of_week, timeslot, status]
         );
         res.json(result.rows[0]);
     } catch (err) {
@@ -50,13 +64,15 @@ exports.getAvailabilitySummary = async (_req, res) => {
             const key = `${row.day_of_week}-${row.timeslot}`;
             const existing = summary.find((s) => s.key === key);
             if (existing) {
-                if (!row.is_available) existing.unavailable += 1;
+                if (row.status === 'blocked') existing.blocked += 1;
+                if (row.status === 'preferred') existing.preferred += 1;
             } else {
                 summary.push({
                     key,
                     day_of_week: row.day_of_week,
                     timeslot: row.timeslot,
-                    unavailable: row.is_available ? 0 : 1
+                    blocked: row.status === 'blocked' ? 1 : 0,
+                    preferred: row.status === 'preferred' ? 1 : 0
                 });
             }
         });

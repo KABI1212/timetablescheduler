@@ -30,7 +30,7 @@ app.use('/api/absence', absenceRoutes);
 app.use('/api/notifications', notificationRoutes);
 
 app.get('/', (_req, res) => {
-    res.json({ message: 'Welcome to LUMOGEN API' });
+    res.json({ message: 'Welcome to ChronoCampus API' });
 });
 
 module.exports = app;

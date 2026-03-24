@@ -60,10 +60,12 @@ CREATE TABLE IF NOT EXISTS timetable (
 );
 
 CREATE TABLE IF NOT EXISTS teacher_availability (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
     teacher_id INTEGER REFERENCES teachers(id) ON DELETE CASCADE,
     day_of_week TEXT NOT NULL,
     timeslot TEXT NOT NULL,
-    is_available BOOLEAN DEFAULT TRUE
+    status TEXT CHECK (status IN ('preferred', 'blocked')) NOT NULL,
+    UNIQUE (teacher_id, day_of_week, timeslot)
 );
 
 CREATE TABLE IF NOT EXISTS leave_requests (

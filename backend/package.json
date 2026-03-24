@@ -1,7 +1,7 @@
 {
   "name": "risingai-backend",
   "version": "1.0.0",
-  "description": "RISING AI Smart Classroom & Timetable Scheduler Backend",
+  "description": "ChronoCampus Smart Classroom & Timetable Scheduler Backend",
   "main": "server.js",
   "scripts": {
     "start": "node server.js",
