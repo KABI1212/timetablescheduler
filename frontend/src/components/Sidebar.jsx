@@ -20,7 +20,7 @@ const Sidebar = ({ className = "", open = false, onClose = () => { } }) => {
             user = null;
         }
     }
-    const role = normalizeRole(user?.role || 'student');
+    const role = normalizeRole(user?.role || 'admin');
     const items = getMenuItemsForRole(role);
 
     return (
@@ -49,7 +49,7 @@ const Sidebar = ({ className = "", open = false, onClose = () => { } }) => {
                     <div className="mt-4 rounded-[1.6rem] border border-primary/15 bg-gradient-to-br from-primary/12 via-transparent to-primaryGlow/8 px-4 py-4">
                         <div className="text-[11px] uppercase tracking-[0.34em] text-primary">Control Deck</div>
                         <p className="mt-2 text-sm font-semibold text-white">
-                            {role === 'student' ? 'Stay on top of your weekly classes.' : 'Run scheduling ops with faster navigation.'}
+                            Run scheduling ops with faster navigation.
                         </p>
                         <p className="mt-2 text-sm leading-relaxed text-secondary">
                             Use the refreshed shell or press <span className="text-white">Ctrl/Cmd + K</span> to jump anywhere instantly.

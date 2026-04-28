@@ -5,15 +5,20 @@ const { authenticate, authenticateSse, requireRole } = require('../middleware/au
 
 router.post('/generate', authenticate, requireRole(['admin']), timetableController.generateTimetable);
 router.get('/generate/progress', authenticateSse, requireRole(['admin']), timetableController.streamProgress);
-router.get('/', authenticate, timetableController.getTimetable);
+router.get('/', authenticate, requireRole(['admin']), timetableController.getTimetable);
 router.get('/working', authenticate, requireRole(['admin']), timetableController.getWorkingTimetable);
 router.get('/status', authenticate, requireRole(['admin']), timetableController.getTimetableStatus);
 router.get('/options', authenticate, requireRole(['admin']), timetableController.getTimetableOptions);
 router.get('/history', authenticate, requireRole(['admin']), timetableController.getTimetableHistory);
+router.get('/versions', authenticate, requireRole(['admin']), timetableController.getTimetableVersions);
+router.get('/validate-conflicts', authenticate, requireRole(['admin']), timetableController.validateTimetableConflicts);
+router.get('/export/pdf', authenticate, requireRole(['admin']), timetableController.exportTimetablePDF);
+router.get('/export/excel', authenticate, requireRole(['admin']), timetableController.exportTimetableExcel);
 router.post('/options/:optionId/select', authenticate, requireRole(['admin']), timetableController.selectTimetableOption);
 router.post('/history/:versionId/rollback', authenticate, requireRole(['admin']), timetableController.rollbackTimetableVersion);
+router.post('/rollback/:versionId', authenticate, requireRole(['admin']), timetableController.rollbackTimetableVersion);
 router.post('/publish', authenticate, requireRole(['admin']), timetableController.publishTimetable);
-router.get('/student/:classId', authenticate, timetableController.getStudentTimetable);
+router.get('/student/:classId', authenticate, requireRole(['admin']), timetableController.getStudentTimetable);
 router.get('/conflicts', authenticate, requireRole(['admin']), timetableController.getConflicts);
 router.post('/conflicts/fix', authenticate, requireRole(['admin']), timetableController.fixConflict);
 router.post('/validate-swap', authenticate, requireRole(['admin']), timetableController.validateSwap);

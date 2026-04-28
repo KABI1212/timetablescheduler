@@ -25,7 +25,7 @@ export const menuItems = [
         path: '/timetable-view',
         label: 'Timetable View',
         icon: 'TV',
-        roles: ['admin', 'teacher'],
+        roles: ['admin'],
         description: 'Review published and draft schedules',
         keywords: ['calendar', 'publish', 'view']
     },
@@ -36,6 +36,22 @@ export const menuItems = [
         roles: ['admin'],
         description: 'Drag, lock, and refine timetable slots',
         keywords: ['edit', 'drag', 'draft', 'arrange']
+    },
+    {
+        path: '/timetable-versions',
+        label: 'Versions',
+        icon: 'VH',
+        roles: ['admin'],
+        description: 'Publish, inspect, and restore timetable snapshots',
+        keywords: ['history', 'rollback', 'publish']
+    },
+    {
+        path: '/conflict-report',
+        label: 'Conflict Report',
+        icon: 'CF',
+        roles: ['admin'],
+        description: 'Validate clashes, lab rooms, and unavailable teachers',
+        keywords: ['conflicts', 'validate', 'fix']
     },
     {
         path: '/teachers',
@@ -65,7 +81,7 @@ export const menuItems = [
         path: '/availability',
         label: 'Availability',
         icon: 'AV',
-        roles: ['admin', 'teacher'],
+        roles: ['admin'],
         description: 'Set preferred, blocked, and leave periods',
         keywords: ['leave', 'preferences', 'blocked']
     },
@@ -86,13 +102,13 @@ export const menuItems = [
         keywords: ['reports', 'charts', 'insights']
     },
     {
-        path: '/student-timetable',
-        label: 'My Timetable',
-        icon: 'ST',
-        roles: ['student'],
-        description: 'See your weekly class schedule',
-        keywords: ['student', 'calendar', 'classes']
-    }
+        path: '/admin-backup',
+        label: 'Backups',
+        icon: 'BK',
+        roles: ['admin'],
+        description: 'Create and restore JSON database backups',
+        keywords: ['backup', 'restore', 'database']
+    },
 ];
 
 export const getMenuItemsForRole = (role) => {
@@ -101,12 +117,5 @@ export const getMenuItemsForRole = (role) => {
 };
 
 export const defaultPathForRole = (role) => {
-    switch (normalizeRole(role)) {
-        case 'teacher':
-            return '/availability';
-        case 'student':
-            return '/student-timetable';
-        default:
-            return '/';
-    }
+    return normalizeRole(role) === 'admin' ? '/' : '/login';
 };

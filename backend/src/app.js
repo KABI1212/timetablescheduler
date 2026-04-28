@@ -11,6 +11,7 @@ const analyticsRoutes = require('./routes/analytics.routes');
 const availabilityRoutes = require('./routes/teacherAvailability.routes');
 const absenceRoutes = require('./routes/absence.routes');
 const notificationRoutes = require('./routes/notification.routes');
+const adminRoutes = require('./routes/admin.routes');
 
 const app = express();
 
@@ -28,6 +29,7 @@ app.use('/api/analytics', analyticsRoutes);
 app.use('/api/availability', availabilityRoutes);
 app.use('/api/absence', absenceRoutes);
 app.use('/api/notifications', notificationRoutes);
+app.use('/api/admin', adminRoutes);
 
 app.get('/', (_req, res) => {
     res.json({ message: 'Welcome to ChronoCampus API' });

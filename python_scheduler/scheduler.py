@@ -91,12 +91,16 @@ class TimetableScheduler:
         self.section_subject_day_count: Dict[Tuple[str, str, int], int] = {}
 
         self.schedule: List[ScheduledSlot] = []
+        self.rejected_slots: List[Dict[str, object]] = []
+        self._rejected_slot_keys: Set[Tuple[str, str, int, int, str]] = set()
 
     # -------------------------
     # Public API
     # -------------------------
 
     def generate_timetable(self) -> List[ScheduledSlot]:
+        self.rejected_slots = []
+        self._rejected_slot_keys = set()
         sessions = self._build_sessions()
         # Step 1: labs first, then theory
         sessions.sort(key=lambda s: (0 if s.session_type == "Lab" else 1, s.section, s.subject_name))
@@ -174,6 +178,19 @@ class TimetableScheduler:
             for p in slot.periods():
                 grids[slot.section][slot.day][p] = label
         return grids
+
+    def get_rejected_slots(self, day_names: List[str]) -> List[Dict[str, object]]:
+        rows: List[Dict[str, object]] = []
+        for item in self.rejected_slots:
+            day_index = int(item["day"])
+            rows.append({
+                "subject": item["subject"],
+                "teacher": item["teacher"],
+                "day": day_names[day_index] if 0 <= day_index < len(day_names) else day_index,
+                "timeslot": item["timeslot"],
+                "reason": item["reason"],
+            })
+        return rows
 
     # -------------------------
     # Session Construction
@@ -255,8 +272,11 @@ class TimetableScheduler:
         for day in range(self.days_per_week):
             for start in range(self.periods_per_day - session.length + 1):
                 for room in rooms:
-                    if self._can_place(session, day, start, room.room_id):
+                    reason = self._placement_rejection_reason(session, day, start, room.room_id)
+                    if reason is None:
                         placements.append((day, start, room.room_id))
+                    else:
+                        self._record_rejected_slot(session, day, start, reason)
         return placements
 
     def _ordered_feasible_placements(self, session: Session) -> List[Tuple[int, int, str]]:
@@ -270,19 +290,36 @@ class TimetableScheduler:
         return placements
 
     def _can_place(self, session: Session, day: int, start: int, room_id: str) -> bool:
+        return self._placement_rejection_reason(session, day, start, room_id) is None
+
+    def _placement_rejection_reason(self, session: Session, day: int, start: int, room_id: str) -> Optional[str]:
         teacher = self.teachers[session.teacher_name]
         for p in range(start, start + session.length):
             if p >= self.periods_per_day:
-                return False
+                return "timeslot outside configured day"
             if self.section_occupied.get((session.section, day, p), False):
-                return False
+                return "section conflict"
             if self.teacher_occupied.get((session.teacher_name, day, p), False):
-                return False
+                return "teacher conflict"
             if self.room_occupied.get((room_id, day, p), False):
-                return False
+                return "room conflict"
             if not teacher.is_available(day, p):
-                return False
-        return True
+                return "teacher unavailable"
+        return None
+
+    def _record_rejected_slot(self, session: Session, day: int, start: int, reason: str) -> None:
+        key = (session.section, session.subject_name, day, start, reason)
+        if key in self._rejected_slot_keys:
+            return
+        self._rejected_slot_keys.add(key)
+        period = f"{start + 1}" if session.length == 1 else f"{start + 1}-{start + session.length}"
+        self.rejected_slots.append({
+            "subject": session.subject_name,
+            "teacher": session.teacher_name,
+            "day": day,
+            "timeslot": period,
+            "reason": reason,
+        })
 
     def _place(self, session: Session, placement: Tuple[int, int, str]) -> None:
         day, start, room_id = placement

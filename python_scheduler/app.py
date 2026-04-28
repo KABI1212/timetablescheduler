@@ -1,7 +1,11 @@
 from __future__ import annotations
 
+from io import BytesIO
 from typing import Dict, List, Optional, Set, Tuple
 from fastapi import FastAPI
+from fastapi.responses import StreamingResponse
+from openpyxl import Workbook
+from openpyxl.styles import Alignment, Font, PatternFill
 from pydantic import BaseModel
 
 from scheduler import Subject, Teacher, Room, TimetableScheduler
@@ -37,9 +41,22 @@ class GenerateRequest(BaseModel):
     optimize: bool = True
 
 
+class ExportExcelRequest(BaseModel):
+    timetable: List[Dict[str, object]]
+
+
 @app.get("/")
 def home() -> str:
     return "Smart Classroom Timetable Scheduler API is running."
+
+
+@app.get("/health")
+def health() -> Dict[str, str]:
+    return {
+        "status": "ok",
+        "scheduler": "simulated_annealing",
+        "version": "1.0.0"
+    }
 
 
 @app.post("/generate")
@@ -89,5 +106,47 @@ def generate(req: GenerateRequest) -> Dict[str, object]:
         "grid": scheduler.to_grid(),
         "classroom_utilization": scheduler.classroom_utilization_report(),
         "teacher_workload": scheduler.teacher_workload_analysis(),
+        "rejected_slots": scheduler.get_rejected_slots(day_names),
         "total_sessions": len(schedule)
     }
+
+
+@app.post("/export-excel")
+def export_excel(payload: ExportExcelRequest) -> StreamingResponse:
+    workbook = Workbook()
+    sheet = workbook.active
+    sheet.title = "Timetable"
+
+    headers = ["Day", "Period", "Section", "Subject", "Teacher", "Room", "Type"]
+    sheet.append(headers)
+
+    header_fill = PatternFill("solid", fgColor="1F4E78")
+    header_font = Font(color="FFFFFF", bold=True)
+    for cell in sheet[1]:
+        cell.fill = header_fill
+        cell.font = header_font
+        cell.alignment = Alignment(horizontal="center")
+
+    for row in payload.timetable:
+        sheet.append([row.get(header, "") for header in headers])
+
+    for column_cells in sheet.columns:
+        max_length = max(len(str(cell.value or "")) for cell in column_cells)
+        sheet.column_dimensions[column_cells[0].column_letter].width = max(12, min(max_length + 2, 36))
+
+    for row in sheet.iter_rows():
+        for cell in row:
+            cell.alignment = Alignment(vertical="top", wrap_text=True)
+
+    buffer = BytesIO()
+    workbook.save(buffer)
+    buffer.seek(0)
+
+    headers_out = {
+        "Content-Disposition": 'attachment; filename="chronocampus-python-timetable.xlsx"'
+    }
+    return StreamingResponse(
+        buffer,
+        media_type="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+        headers=headers_out
+    )

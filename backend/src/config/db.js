@@ -623,9 +623,55 @@ const addAuditLog = (log) => {
 
 const getAuditLogs = () => clone(data.audit_logs || []);
 
+const getDatabasePath = () => dbPath;
+
+const getRawData = () => {
+  if (fs.existsSync(dbPath)) {
+    data = JSON.parse(fs.readFileSync(dbPath, 'utf8'));
+    normalizeData();
+  }
+  return clone(data);
+};
+
+const replaceRawData = (nextData) => {
+  data = clone(nextData || {});
+  normalizeData();
+  save();
+  return getRawData();
+};
+
+const updateUserPassword = (userId, passwordHash) => {
+  const user = data.users.find((candidate) => candidate.id == userId);
+  if (!user) return null;
+  user.password_hash = passwordHash;
+  save();
+  return clone(user);
+};
+
+const markNotificationRead = (userId, notificationId) => {
+  const notification = data.notifications.find((item) => (
+    item.id == notificationId && item.user_id == userId
+  ));
+  if (!notification) return null;
+  notification.is_read = true;
+  save();
+  return clone(notification);
+};
+
+const clearNotifications = (userId) => {
+  data.notifications = (data.notifications || []).filter((item) => item.user_id != userId);
+  save();
+};
+
 module.exports = {
   query,
   initializeDB,
+  getDatabasePath,
+  getRawData,
+  replaceRawData,
+  updateUserPassword,
+  markNotificationRead,
+  clearNotifications,
   setGeneratedTimetable,
   getGeneratedTimetable,
   setGeneratedTimetableOptions,

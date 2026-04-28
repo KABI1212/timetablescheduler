@@ -1,6 +1,8 @@
 const db = require('../config/db');
 const TimetableScheduler = require('../services/aiScheduling.service');
 const { findSubstitutes } = require('../services/substituteEngine.service');
+const PDFDocument = require('pdfkit');
+const ExcelJS = require('exceljs');
 
 const progressClients = new Set();
 
@@ -188,10 +190,11 @@ const analyzeSchedule = async (scheduleRows, options = {}) => {
     const teachers = options.teachers || (await db.query('SELECT * FROM teachers')).rows;
     const leaveRequests = options.leaveRequests || (await db.query('SELECT * FROM leave_requests')).rows;
     const availability = options.availability || (await db.query('SELECT * FROM teacher_availability')).rows;
-    const { classrooms, users } = await loadLookupData();
+    const { classrooms, users, subjects } = await loadLookupData();
 
     const teacherById = new Map(teachers.map((teacher) => [Number(teacher.id), teacher]));
     const classroomById = new Map(classrooms.map((room) => [Number(room.id), room]));
+    const subjectById = new Map(subjects.map((subject) => [Number(subject.id), subject]));
     const teacherNameById = new Map();
 
     teachers.forEach((teacher) => {
@@ -203,6 +206,7 @@ const analyzeSchedule = async (scheduleRows, options = {}) => {
     const { blockedSet, preferredByTeacher } = buildAvailabilityMaps(availability);
     const teacherSlots = new Map();
     const roomSlots = new Map();
+    const sectionSlots = new Map();
     const teacherDailyCount = new Map();
     const teacherWeeklyCount = new Map();
     const conflicts = [];
@@ -212,11 +216,14 @@ const analyzeSchedule = async (scheduleRows, options = {}) => {
         const originalTeacherId = Number(entry.teacher_id);
         const roomId = Number(entry.classroom_id);
         const room = classroomById.get(roomId);
+        const subject = subjectById.get(Number(entry.subject_id)) || {};
         const teacherName = teacherNameById.get(teacherId) || `Teacher ${teacherId}`;
         const roomName = room?.name || `Room ${roomId}`;
         const slotKey = `${entry.day_of_week}-${entry.start_time}`;
         const teacherSlotKey = `${slotKey}-${teacherId}`;
         const roomSlotKey = `${slotKey}-${roomId}`;
+        const sectionId = entry.section_id || entry.class_id || entry.section || entry.classroom_id;
+        const sectionSlotKey = `${slotKey}-${sectionId}`;
 
         if (room?.maintenance_mode) {
             conflicts.push(createConflict({
@@ -260,6 +267,35 @@ const analyzeSchedule = async (scheduleRows, options = {}) => {
             }));
         } else {
             roomSlots.set(roomSlotKey, entry.id);
+        }
+
+        if (sectionId && sectionSlots.has(sectionSlotKey)) {
+            conflicts.push(createConflict({
+                id: `section-${entry.id || sectionSlotKey}`,
+                type: 'Section double-booked',
+                details: `Section ${sectionId} is scheduled for multiple subjects on ${entry.day_of_week} at ${entry.start_time}.`,
+                constraint_code: 'section_double_booked',
+                entry_id: entry.id,
+                section_id: sectionId,
+                day_of_week: entry.day_of_week,
+                start_time: entry.start_time
+            }));
+        } else if (sectionId) {
+            sectionSlots.set(sectionSlotKey, entry.id);
+        }
+
+        if ((subject.is_lab || entry.session_type === 'lab') && !room?.is_lab) {
+            conflicts.push(createConflict({
+                id: `lab-room-${entry.id || roomSlotKey}`,
+                type: 'Lab assigned to non-lab room',
+                details: `${subject.name || `Subject ${entry.subject_id}`} needs a lab room, but ${roomName} is not marked as a lab.`,
+                constraint_code: 'lab_room_mismatch',
+                entry_id: entry.id,
+                subject_id: entry.subject_id,
+                classroom_id: roomId,
+                day_of_week: entry.day_of_week,
+                start_time: entry.start_time
+            }));
         }
 
         if (isTeacherUnavailable(teacherId, entry.day_of_week, entry.start_time, leaveMap, blockedSet)) {
@@ -645,6 +681,8 @@ exports.getTimetableHistory = async (_req, res) => {
     }
 };
 
+exports.getTimetableVersions = exports.getTimetableHistory;
+
 /**
  * @param {import('express').Request} req
  * @param {import('express').Response} res
@@ -804,6 +842,128 @@ exports.publishTimetable = async (req, res) => {
     } catch (err) {
         console.error(err);
         res.status(500).json({ error: 'Server error' });
+    }
+};
+
+const toStructuredConflictReport = (analysis) => ({
+    hasConflicts: analysis.conflicts.length > 0,
+    conflicts: analysis.conflicts.map((conflict) => ({
+        id: conflict.id,
+        type: conflict.constraint_code || conflict.type,
+        description: conflict.details || conflict.description || conflict.type,
+        affectedEntries: [conflict.entry_id].filter(Boolean),
+        day_of_week: conflict.day_of_week,
+        start_time: conflict.start_time,
+        teacher_id: conflict.teacher_id,
+        classroom_id: conflict.classroom_id,
+        section_id: conflict.section_id,
+        severity: conflict.severity || 'error'
+    })),
+    summary: analysis.summary
+});
+
+exports.validateTimetableConflicts = async (_req, res) => {
+    try {
+        const schedule = db.getWorkingTimetable().length > 0 ? db.getWorkingTimetable() : db.getTimetableData();
+        const analysis = await analyzeSchedule(schedule);
+        res.json(toStructuredConflictReport(analysis));
+    } catch (err) {
+        console.error(err);
+        res.status(500).json({ error: 'Server error while validating timetable conflicts' });
+    }
+};
+
+const filterTimetableForExport = (rows, query) => {
+    const role = String(query.role || 'admin').toLowerCase();
+    const id = query.id;
+    if (!id || role === 'admin') return rows;
+    if (role === 'teacher') {
+        return rows.filter((row) => String(row.teacher_id) === String(id) || String(row.substitute_teacher_id) === String(id));
+    }
+    if (role === 'student') {
+        return rows.filter((row) => String(row.classroom_id) === String(id) || String(row.class_id) === String(id));
+    }
+    return rows;
+};
+
+const writeTimetablePdf = (res, rows) => {
+    const doc = new PDFDocument({ margin: 36, size: 'A4', layout: 'landscape' });
+    res.setHeader('Content-Type', 'application/pdf');
+    res.setHeader('Content-Disposition', 'attachment; filename="chronocampus-timetable.pdf"');
+    doc.pipe(res);
+
+    doc.fontSize(18).text('ChronoCampus Timetable', { align: 'center' });
+    doc.moveDown();
+    doc.fontSize(9);
+
+    const headers = ['Day', 'Time', 'Subject', 'Teacher', 'Room', 'Type'];
+    const widths = [75, 90, 170, 150, 120, 70];
+    let y = doc.y;
+
+    const drawRow = (values, isHeader = false) => {
+        let x = doc.page.margins.left;
+        const rowHeight = 24;
+        values.forEach((value, index) => {
+            doc.rect(x, y, widths[index], rowHeight).stroke();
+            doc.font(isHeader ? 'Helvetica-Bold' : 'Helvetica')
+                .text(String(value || ''), x + 4, y + 7, { width: widths[index] - 8, height: rowHeight - 8 });
+            x += widths[index];
+        });
+        y += rowHeight;
+        if (y > doc.page.height - doc.page.margins.bottom - rowHeight) {
+            doc.addPage();
+            y = doc.page.margins.top;
+        }
+    };
+
+    drawRow(headers, true);
+    rows.forEach((row) => drawRow([
+        row.day_of_week,
+        `${row.start_time || ''}-${row.end_time || ''}`,
+        row.subject_name,
+        row.teacher_name,
+        row.classroom_name,
+        row.session_type || 'theory'
+    ]));
+
+    doc.end();
+};
+
+exports.exportTimetablePDF = async (req, res) => {
+    try {
+        const rows = filterTimetableForExport(await decorateScheduleRows(db.getTimetableData()), req.query);
+        writeTimetablePdf(res, rows);
+    } catch (err) {
+        console.error(err);
+        res.status(500).json({ error: 'Unable to export PDF' });
+    }
+};
+
+exports.exportTimetableExcel = async (req, res) => {
+    try {
+        const rows = filterTimetableForExport(await decorateScheduleRows(db.getTimetableData()), req.query);
+        const workbook = new ExcelJS.Workbook();
+        const sheet = workbook.addWorksheet('Timetable');
+
+        sheet.columns = [
+            { header: 'Day', key: 'day_of_week', width: 14 },
+            { header: 'Start', key: 'start_time', width: 14 },
+            { header: 'End', key: 'end_time', width: 14 },
+            { header: 'Subject', key: 'subject_name', width: 28 },
+            { header: 'Teacher', key: 'teacher_name', width: 24 },
+            { header: 'Room', key: 'classroom_name', width: 18 },
+            { header: 'Type', key: 'session_type', width: 12 }
+        ];
+        sheet.getRow(1).font = { bold: true };
+        rows.forEach((row) => sheet.addRow(row));
+
+        res.setHeader('Content-Type', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
+        res.setHeader('Content-Disposition', 'attachment; filename="chronocampus-timetable.xlsx"');
+        await workbook.xlsx.write(res);
+        res.end();
+    } catch (err) {
+        console.error(err);
+        res.status(500).json({ error: 'Unable to export Excel' });
     }
 };
 

@@ -1,6 +1,6 @@
 // @ts-nocheck
 import React, { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { login } from '../utils/api';
 import { useToast } from '../components/ToastProvider';
 import BrandMark from '../components/BrandMark';
@@ -8,7 +8,6 @@ import BrandMark from '../components/BrandMark';
 const Login = () => {
     const [email, setEmail] = useState('');
     const [password, setPassword] = useState('');
-    const [role, setRole] = useState('admin');
     const [errors, setErrors] = useState(/** @type {Record<string, string>} */ ({}));
     const [authError, setAuthError] = useState('');
     const navigate = useNavigate();
@@ -29,16 +28,9 @@ const Login = () => {
         if (Object.keys(nextErrors).length > 0) return;
 
         try {
-            const data = await login(email, password, role);
+            await login(email, password);
             toast.success('Welcome to ChronoCampus');
-            const nextRole = data?.user?.role || 'student';
-            if (nextRole === 'student') {
-                navigate('/student-timetable');
-            } else if (nextRole === 'teacher') {
-                navigate('/availability');
-            } else {
-                navigate('/');
-            }
+            navigate('/');
         } catch (err) {
             const message = err instanceof Error ? err.message : 'Login failed';
             setAuthError(message);
@@ -82,9 +74,9 @@ const Login = () => {
                 <section className="card-glass rounded-[2.25rem] p-6 md:p-8">
                     <div className="mb-8">
                         <div className="text-[11px] uppercase tracking-[0.34em] text-primary">Secure Access</div>
-                        <h2 className="mt-3 text-3xl font-black text-white">Enter workspace</h2>
+                        <h2 className="mt-3 text-3xl font-black text-white">Enter admin console</h2>
                         <p className="mt-2 text-sm text-secondary">
-                            Sign in as admin, teacher, or student to open the right control surface.
+                            Sign in with an admin account to open the control surface.
                         </p>
                     </div>
 
@@ -100,7 +92,7 @@ const Login = () => {
                             <input
                                 type="email"
                                 className="input-quantum w-full rounded-2xl p-4"
-                                placeholder="name@campus.edu"
+                                placeholder="admin@rising.ai"
                                 value={email}
                                 onChange={(event) => setEmail(event.target.value)}
                             />
@@ -118,22 +110,12 @@ const Login = () => {
                             />
                         </div>
 
-                        <div>
-                            <label className="mb-2 block text-sm text-secondary">Login As</label>
-                            <select
-                                className="input-quantum w-full rounded-2xl p-4"
-                                value={role}
-                                onChange={(event) => setRole(event.target.value)}
-                            >
-                                <option value="admin">Admin</option>
-                                <option value="teacher">Teacher</option>
-                                <option value="student">Student</option>
-                            </select>
-                        </div>
-
                         <button type="submit" className="btn-primary w-full rounded-2xl py-4 font-semibold uppercase tracking-[0.28em]">
-                            Enter Workspace
+                            Enter Admin Console
                         </button>
+                        <Link to="/forgot-password" className="block text-center text-sm text-secondary hover:text-white">
+                            Forgot password?
+                        </Link>
                     </form>
 
                     <div className="mt-6 rounded-[1.5rem] border border-white/10 bg-white/[0.05] p-4">

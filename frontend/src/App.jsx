@@ -3,7 +3,7 @@ import { BrowserRouter as Router, Routes, Route, Navigate, useLocation } from 'r
 import Sidebar from './components/Sidebar';
 import Navbar from './components/Navbar';
 import CommandPalette from './components/CommandPalette';
-import { defaultPathForRole, normalizeRole } from './config/navigation';
+import { normalizeRole } from './config/navigation';
 const Dashboard = lazy(() => import('./pages/Dashboard'));
 const AiTimetableGenerator = lazy(() => import('./pages/AiTimetableGenerator'));
 const TeacherManagement = lazy(() => import('./pages/TeacherManagement'));
@@ -13,9 +13,13 @@ const TimetableView = lazy(() => import('./pages/TimetableView'));
 const TeacherAvailability = lazy(() => import('./pages/TeacherAvailability'));
 const AbsenceManager = lazy(() => import('./pages/AbsenceManager'));
 const Analytics = lazy(() => import('./pages/Analytics'));
-const StudentTimetable = lazy(() => import('./pages/StudentTimetable'));
 const TimetableEditor = lazy(() => import('./pages/TimetableEditor'));
 const Login = lazy(() => import('./pages/Login'));
+const ForgotPassword = lazy(() => import('./pages/ForgotPassword'));
+const Profile = lazy(() => import('./pages/Profile'));
+const TimetableVersions = lazy(() => import('./pages/TimetableVersions'));
+const ConflictReport = lazy(() => import('./pages/ConflictReport'));
+const AdminBackup = lazy(() => import('./pages/AdminBackup'));
 
 const getStoredUser = () => {
     const raw = localStorage.getItem('chrono_user');
@@ -31,22 +35,17 @@ const getStoredUser = () => {
  * @param {Object} props
  * @param {React.ReactNode} props.children
  */
-const PrivateRoute = ({ children }) => {
-    return localStorage.getItem('chrono_token') ? children : <Navigate to="/login" />;
-};
-
-/**
- * @param {Object} props
- * @param {React.ReactNode} props.children
- * @param {string[]} props.roles
- */
-const RoleRoute = ({ children, roles = [] }) => {
+const ProtectedRoute = ({ children }) => {
+    const token = localStorage.getItem('chrono_token');
     const user = getStoredUser();
-    const role = normalizeRole(user?.role || 'student');
-    if (!localStorage.getItem('chrono_token')) return <Navigate to="/login" />;
-    if (roles.length > 0 && !roles.map(normalizeRole).includes(role)) {
-        return <Navigate to={defaultPathForRole(role)} replace />;
+    const role = normalizeRole(user?.role || 'admin');
+
+    if (!token || role !== 'admin') {
+        localStorage.removeItem('chrono_token');
+        localStorage.removeItem('chrono_user');
+        return <Navigate to="/login" replace />;
     }
+
     return children;
 };
 
@@ -65,7 +64,7 @@ const RouteFallback = () => (
 const Layout = ({ children }) => {
     const location = useLocation();
     const user = getStoredUser();
-    const role = normalizeRole(user?.role || 'student');
+    const role = normalizeRole(user?.role || 'admin');
     const [sidebarOpen, setSidebarOpen] = useState(false);
     const [commandPaletteOpen, setCommandPaletteOpen] = useState(false);
 
@@ -128,69 +127,35 @@ function App() {
                         </Suspense>
                     )}
                 />
+                <Route
+                    path="/forgot-password"
+                    element={(
+                        <Suspense fallback={<div className="min-h-screen bg-shell p-6"><RouteFallback /></div>}>
+                            <ForgotPassword />
+                        </Suspense>
+                    )}
+                />
                 <Route path="/*" element={
-                    <PrivateRoute>
+                    <ProtectedRoute>
                         <Layout>
                             <Routes>
-                                <Route path="/" element={
-                                    <RoleRoute roles={['admin']}>
-                                        <Dashboard />
-                                    </RoleRoute>
-                                } />
-                                <Route path="/timetable-ai" element={
-                                    <RoleRoute roles={['admin']}>
-                                        <AiTimetableGenerator />
-                                    </RoleRoute>
-                                } />
-                                <Route path="/timetable-view" element={
-                                    <RoleRoute roles={['admin', 'teacher']}>
-                                        <TimetableView />
-                                    </RoleRoute>
-                                } />
-                                <Route path="/timetable-editor" element={
-                                    <RoleRoute roles={['admin']}>
-                                        <TimetableEditor />
-                                    </RoleRoute>
-                                } />
-                                <Route path="/teachers" element={
-                                    <RoleRoute roles={['admin']}>
-                                        <TeacherManagement />
-                                    </RoleRoute>
-                                } />
-                                <Route path="/classrooms" element={
-                                    <RoleRoute roles={['admin']}>
-                                        <ClassroomManagement />
-                                    </RoleRoute>
-                                } />
-                                <Route path="/subjects" element={
-                                    <RoleRoute roles={['admin']}>
-                                        <SubjectManagement />
-                                    </RoleRoute>
-                                } />
-                                <Route path="/availability" element={
-                                    <RoleRoute roles={['admin', 'teacher']}>
-                                        <TeacherAvailability />
-                                    </RoleRoute>
-                                } />
-                                <Route path="/absences" element={
-                                    <RoleRoute roles={['admin']}>
-                                        <AbsenceManager />
-                                    </RoleRoute>
-                                } />
-                                <Route path="/analytics" element={
-                                    <RoleRoute roles={['admin']}>
-                                        <Analytics />
-                                    </RoleRoute>
-                                } />
-                                <Route path="/student-timetable" element={
-                                    <RoleRoute roles={['student']}>
-                                        <StudentTimetable />
-                                    </RoleRoute>
-                                } />
-
+                                <Route path="/" element={<Dashboard />} />
+                                <Route path="/timetable-ai" element={<AiTimetableGenerator />} />
+                                <Route path="/timetable-view" element={<TimetableView />} />
+                                <Route path="/timetable-editor" element={<TimetableEditor />} />
+                                <Route path="/timetable-versions" element={<TimetableVersions />} />
+                                <Route path="/conflict-report" element={<ConflictReport />} />
+                                <Route path="/teachers" element={<TeacherManagement />} />
+                                <Route path="/classrooms" element={<ClassroomManagement />} />
+                                <Route path="/subjects" element={<SubjectManagement />} />
+                                <Route path="/availability" element={<TeacherAvailability />} />
+                                <Route path="/absences" element={<AbsenceManager />} />
+                                <Route path="/analytics" element={<Analytics />} />
+                                <Route path="/admin-backup" element={<AdminBackup />} />
+                                <Route path="/profile" element={<Profile />} />
                             </Routes>
                         </Layout>
-                    </PrivateRoute>
+                    </ProtectedRoute>
                 } />
             </Routes>
         </Router>

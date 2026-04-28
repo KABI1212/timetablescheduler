@@ -50,10 +50,10 @@ export const apiFetch = async (endpoint, options = {}) => {
  * @param {string} email
  * @param {string} password
  */
-export const login = async (email, password, role) => {
+export const login = async (email, password) => {
     const data = await apiFetch('/auth/login', {
         method: 'POST',
-        body: JSON.stringify({ email, password, role })
+        body: JSON.stringify({ email, password })
     });
     localStorage.setItem('chrono_token', data.token);
     localStorage.setItem('chrono_user', JSON.stringify(data.user));

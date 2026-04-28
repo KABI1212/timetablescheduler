@@ -6,6 +6,17 @@ import { useToast } from '../components/ToastProvider';
 import ConflictPanel from '../components/ConflictPanel';
 import BrandMark from '../components/BrandMark';
 
+const decodeJwtRole = () => {
+    const token = localStorage.getItem('chrono_token');
+    if (!token) return 'admin';
+    try {
+        const payload = JSON.parse(atob(token.split('.')[1] || ''));
+        return String(payload.role || 'admin').toLowerCase();
+    } catch {
+        return 'admin';
+    }
+};
+
 /**
  * @param {{ label: string, value: number, max: number, tone: 'primary' | 'success' | 'warning' }} props
  */
@@ -54,6 +65,7 @@ const Dashboard = () => {
     const [data, setData] = useState(initialData);
     const [auditTrail, setAuditTrail] = useState(/** @type {any[]} */([]));
     const [blockedRooms, setBlockedRooms] = useState(/** @type {any[]} */([]));
+    const [conflictCount, setConflictCount] = useState(0);
     const [loading, setLoading] = useState(true);
     const [loadError, setLoadError] = useState('');
     const toast = useToast();
@@ -61,14 +73,16 @@ const Dashboard = () => {
     useEffect(() => {
         const loadAnalytics = async () => {
             try {
-                const [res, audit, rooms] = await Promise.all([
+                const [res, audit, rooms, conflicts] = await Promise.all([
                     apiFetch('/analytics'),
                     apiFetch('/analytics/audit-trail'),
-                    apiFetch('/classrooms')
+                    apiFetch('/classrooms'),
+                    apiFetch('/timetable/validate-conflicts')
                 ]);
                 setData(res);
                 setAuditTrail(audit);
                 setBlockedRooms((rooms || []).filter((room) => room.maintenance_mode));
+                setConflictCount(conflicts?.summary?.total || conflicts?.conflicts?.length || 0);
                 setLoadError('');
             } catch (err) {
                 const error = /** @type {Error} */ (err);
@@ -81,6 +95,7 @@ const Dashboard = () => {
                 });
                 setAuditTrail([]);
                 setBlockedRooms([]);
+                setConflictCount(0);
             } finally {
                 setLoading(false);
             }
@@ -109,11 +124,25 @@ const Dashboard = () => {
     if (!data) return null;
 
     const { overview, teacherUtilization, classroomUtilization } = /** @type {AnalyticsData} */ (data);
-    const quickActions = [
-        { path: '/timetable-ai', label: 'Generate Options', detail: 'Run the AI scheduler and compare candidate drafts.' },
-        { path: '/timetable-editor', label: 'Refine Draft', detail: 'Lock sensitive slots and fine-tune the weekly layout.' },
-        { path: '/analytics', label: 'Inspect Analytics', detail: 'Review workload, room pressure, and schedule health.' }
-    ];
+    const role = decodeJwtRole();
+    const quickActionsByRole = {
+        admin: [
+            { path: '/timetable-ai', label: 'Generate Options', detail: 'Run the AI scheduler and compare candidate drafts.' },
+            { path: '/conflict-report', label: 'Review Conflicts', detail: `${conflictCount} timetable conflicts currently detected.` },
+            { path: '/admin-backup', label: 'Backup Database', detail: 'Create a restore point before major operations.' }
+        ],
+        teacher: [
+            { path: '/timetable-view', label: "Today's Schedule", detail: 'Review assigned classes and substitutions.' },
+            { path: '/availability', label: 'Availability', detail: 'Maintain blocked and preferred slots.' },
+            { path: '/profile', label: 'Profile', detail: 'Update account details and password.' }
+        ],
+        student: [
+            { path: '/timetable-view', label: "Today's Classes", detail: 'Open the latest published timetable.' },
+            { path: '/timetable-view', label: 'Weekly Timetable', detail: 'Scan the full weekly class grid.' },
+            { path: '/profile', label: 'Profile', detail: 'Review account information.' }
+        ]
+    };
+    const quickActions = quickActionsByRole[role] || quickActionsByRole.admin;
 
     return (
         <div className="space-y-8 pb-10">
@@ -173,7 +202,8 @@ const Dashboard = () => {
                 {[
                     { label: 'Total Faculty', value: overview.teachers, accent: 'primary' },
                     { label: 'Active Rooms', value: overview.classrooms, accent: 'success' },
-                    { label: 'Subjects', value: overview.subjects, accent: 'warning' }
+                    { label: 'Subjects', value: overview.subjects, accent: 'warning' },
+                    { label: 'Conflicts', value: conflictCount, accent: 'primary' }
                 ].map((stat, index) => (
                     <div key={index} className="card-glass relative overflow-hidden rounded-[1.8rem] p-6">
                         <div className="absolute right-0 top-0 h-24 w-24 -mr-8 -mt-8 rounded-full border border-primary/20 bg-primary/10" />

@@ -1,0 +1,8 @@
+cd "d:\Smart Classroom & Timetable Scheduler\backend"
+npm run dev
+
+
+
+cd "d:\Smart Classroom & Timetable Scheduler\frontend"
+npm run dev
+
